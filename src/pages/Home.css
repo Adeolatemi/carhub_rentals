@@ -1,0 +1,129 @@
+.home {
+  font-family: Arial, sans-serif;
+}
+
+/* HERO */
+.hero {
+  height: 70vh;
+  background: url("/images/hero-car.jpg") center/cover no-repeat;
+  position: relative;
+}
+
+.hero-overlay {
+  background: rgba(0, 0, 0, 0.6);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 5%;
+}
+
+.hero-content h1 {
+  color: #fff;
+  font-size: 48px;
+}
+
+.hero-content p {
+  color: #ddd;
+  font-size: 20px;
+}
+
+/* BOOKING */
+.booking-section {
+  display: flex;
+  justify-content: center;
+  margin-top: -60px;
+  padding: 0 20px;
+}
+
+.booking-container {
+  background: white;
+  padding: 25px;
+  border-radius: 14px;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+  width: 100%;
+  max-width: 1100px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+.booking-input {
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  width: 100%;
+}
+
+.large {
+  grid-column: span 2;
+}
+
+.select-btn {
+  background: #00b3b3;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* FLEET */
+.fleet-preview {
+  padding: 80px 5%;
+  text-align: center;
+}
+
+.fleet-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-top: 40px;
+}
+
+.fleet-card {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.fleet-card:hover {
+  transform: translateY(-8px);
+}
+
+.fleet-card img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+.fleet-card h3 {
+  margin: 15px 0 5px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1024px) {
+  .booking-container {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .fleet-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-content h1 {
+    font-size: 32px;
+  }
+
+  .booking-container {
+    grid-template-columns: 1fr;
+  }
+
+  .fleet-grid {
+    grid-template-columns: 1fr;
+  }
+}

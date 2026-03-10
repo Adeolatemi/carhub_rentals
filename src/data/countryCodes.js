@@ -1,0 +1,14 @@
+export default [
+  { code: 'NG', name: 'Nigeria', prefix: '+234' },
+  { code: 'US', name: 'United States', prefix: '+1' },
+  { code: 'GB', name: 'United Kingdom', prefix: '+44' },
+  { code: 'GH', name: 'Ghana', prefix: '+233' },
+  { code: 'KE', name: 'Kenya', prefix: '+254' },
+  { code: 'ZA', name: 'South Africa', prefix: '+27' },
+  { code: 'CA', name: 'Canada', prefix: '+1' },
+  { code: 'IN', name: 'India', prefix: '+91' },
+  { code: 'AU', name: 'Australia', prefix: '+61' },
+  { code: 'NL', name: 'Netherlands', prefix: '+31' },
+  { code: 'DE', name: 'Germany', prefix: '+49' },
+  { code: 'FR', name: 'France', prefix: '+33' }
+]

@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String          @id @default(cuid())
+  email          String          @unique
+  password       String
+  name           String?
+  role           String          @default("CUSTOMER")
+  isActive       Boolean         @default(true)
+  kycStatus      String? // e.g. PENDING/VERIFIED/REJECTED from SmileId
+  kycFile        String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  orders         Order[]
+  auditLogs      AuditLog[]      @relation("UserAuditLogs")
+  partnerDetails PartnerDetails?
+}
+
+model VehicleCategory {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  vehicles Vehicle[]
+}
+
+model Vehicle {
+  id          String           @id @default(cuid())
+  title       String
+  description String?
+  dailyRate   Float
+  available   Boolean          @default(true)
+  category    VehicleCategory? @relation(fields: [categoryId], references: [id])
+  categoryId  String?
+  features    VehicleFeature[]
+  createdAt   DateTime         @default(now())
+}
+
+model Order {
+  id             String            @id @default(cuid())
+  user           User              @relation(fields: [userId], references: [id])
+  userId         String
+  vehicleId      String
+  startDate      DateTime
+  endDate        DateTime
+  totalAmount    Float
+  status         String            @default("PENDING")
+  pickupLocation String?
+  dropoffLocation String?
+  adminNote      String?
+  canceledReason String?
+  createdAt      DateTime          @default(now())
+  attachments    OrderAttachment[] // 👈 ADD THIS LINEnpx prisma format
+  vehicle        Vehicle?          @relation(fields: [vehicleId], references: [id])
+  transactions   Transaction[]
+}
+
+model OrderAttachment {
+  id        String   @id @default(cuid())
+  order     Order    @relation(fields: [orderId], references: [id])
+  orderId   String
+  path      String
+  type      String?
+  createdAt DateTime @default(now())
+}
+
+model Transaction {
+  id          String   @id @default(cuid())
+  orderId     String
+  provider    String
+  providerRef String?  @unique
+  amount      Float
+  createdAt   DateTime @default(now())
+}
+
+model Feature {
+  id       String           @id @default(cuid())
+  name     String           @unique
+  desc     String?
+  vehicles VehicleFeature[]
+}
+
+model VehicleFeature {
+  id        String  @id @default(cuid())
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id])
+  vehicleId String
+  feature   Feature @relation(fields: [featureId], references: [id])
+  featureId String
+
+  @@unique([vehicleId, featureId])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String?
+  actor     User?    @relation("UserAuditLogs", fields: [actorId], references: [id])
+  action    String
+  meta      String?
+  createdAt DateTime @default(now())
+}
+
+model PartnerDetails {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String   @unique
+  company   String?
+  phone     String?
+  createdAt DateTime @default(now())
+}
