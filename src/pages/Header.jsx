@@ -26,10 +26,13 @@ shadow-lg backdrop-blur-sm">
         {/* Logo */}
         <div className="flex items-center">
           <Link to="/" className="flex items-center gap-2">
-            <img src="/carhub_logo.jpg" alt="CarHub Logo"  className="h-20 w-auto object-contain cursor-pointer hover:opacity-90 transition" />
+            {/* <img src="/carhub_logo.jpg" alt="CarHub Logo"  */}
 
             
-            
+            <img
+  src={`${import.meta.env.BASE_URL}images/carhub_logo.jpg`}
+  alt="CarHub Logo"  className="h-20 w-auto object-contain cursor-pointer hover:opacity-90 transition" />
+
             {/* <img
               src="/images/carhub_logo.jpg"
               alt="CarHub Logo" */}

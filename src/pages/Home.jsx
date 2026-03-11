@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
+// const SLIDE_IMAGES = [
+//   "/images/back_drop.jpg",
+//   "/images/background_image.jpg"
 const SLIDE_IMAGES = [
-  "/images/back_drop.jpg",
-  "/images/background_image.jpg"
+  `${import.meta.env.BASE_URL}images/back_drop.jpg`,
+  `${import.meta.env.BASE_URL}images/background_image.jpg`
+
 ];
 
 export default function Home() {
