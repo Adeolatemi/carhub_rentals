@@ -26,12 +26,16 @@ shadow-lg backdrop-blur-sm">
         {/* Logo */}
         <div className="flex items-center">
           <Link to="/" className="flex items-center gap-2">
-            <img
+            <img src="/carhub_logo.jpg" alt="CarHub Logo"  className="h-20 w-auto object-contain cursor-pointer hover:opacity-90 transition" />
+
+            
+            
+            {/* <img
               src="/images/carhub_logo.jpg"
-              alt="CarHub Logo"
-              className="h-12 w-auto object-contain cursor-pointer hover:opacity-90 transition"
-            />
-            <span className="text-white font-bold text-lg">CarHub</span>
+              alt="CarHub Logo" */}
+             
+            
+            {/* <span className="text-white font-bold text-lg">CarHub</span> */}
           </Link>
         </div>
 
