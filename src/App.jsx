@@ -10,6 +10,8 @@ import Home from "./pages/Home";
 import Booking from "./pages/Booking";
 import OurFleet from "./pages/OurFleet";
 import About from "./pages/About";
+import FAQs from "./pages/Faqs";
+import Contact from "./pages/Contact";
 import VehicleDetail from "./pages/VehicleDetail";
 
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
@@ -48,6 +50,8 @@ function AppLayout() {
           <Route path="/booking" element={<Booking />} />
           <Route path="/booking/:vehicleId" element={<Booking />} />
 
+           <Route path="/faqs" element={<FAQs />} />
+          <Route path="/contact" element={<Contact />} />
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
 

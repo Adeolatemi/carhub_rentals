@@ -1,29 +1,14 @@
-// import React from "react";
-// import { StrictMode } from "react";
-// import { createRoot } from "react-dom/client";
-// import { HashRouter } from "react-router-dom";
-
-// import "./index.css";
-// import App from "./App.jsx";
-
-// const rootElement = document.getElementById("root");
-
-// createRoot(rootElement).render(
-//   <StrictMode>
-//     <HashRouter>
-//       <App />
-//     </HashRouter>
-//   </StrictMode>
-// );
-
-
 import React from "react";
-import { createRoot } from "react-dom/client";
-import { HashRouter } from "react-router-dom";  // ✅ Correct import
-import App from "./App.jsx";
+import ReactDOM from "react-dom/client";
+import { HashRouter } from "react-router-dom";
 
-createRoot(document.getElementById("root")).render(
-  <HashRouter>
-    <App />
-  </HashRouter>
+import App from "./App.jsx";
+import "./index.css";
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <HashRouter>
+      <App />
+    </HashRouter>
+  </React.StrictMode>
 );

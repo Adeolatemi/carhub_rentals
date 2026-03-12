@@ -2,6 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ---------------------------------------- */
+/* Dark/Light theme setup */
+@layer base {
+  body {
+    @apply bg-white text-black;
+  }
+
+  .dark body {
+    @apply bg-slate-900 text-white;
+  }
+}
+
+/* ---------------------------------------- */
+/* Custom animations */
 @keyframes slide {
   0% {
     transform: translateX(100%);
@@ -10,6 +24,43 @@
     transform: translateX(-100%);
   }
 }
-.input {
-  @apply w-full p-2 rounded bg-slate-800 border border-slate-700 text-white;
+
+/* ---------------------------------------- */
+/* Custom utilities */
+@layer utilities {
+  .pause {
+    animation-play-state: paused;
+  }
+}
+
+/* ---------------------------------------- */
+/* Custom components */
+@layer components {
+  .input {
+    @apply w-full p-2 rounded bg-slate-800 border border-slate-700 text-white;
+  }
+
+  /* Dark mode input */
+  .dark .input {
+    @apply bg-slate-700 border-slate-600 text-white;
+  }
+
+  /* Scrolling banner text */
+  .banner-text {
+    @apply text-black dark:text-white text-sm md:text-base lg:text-lg mr-16;
+  }
+}
+
+/* ---------------------------------------- */
+/* Smooth transitions for theme changes */
+body, header, nav, .input, .banner-text, div.bg-slate-900, div.dark\:bg-slate-800 {
+  transition: background-color 0.3s ease, color 0.3s ease;
+
+@layer components {
+  /* Scrolling banner text */
+  .banner-text {
+    @apply text-white dark:text-white text-sm md:text-base lg:text-lg mr-16;
+  }
+}
+
 }
