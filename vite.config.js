@@ -6,11 +6,20 @@
 //   plugins: [react()],
 // })
 
+// import { defineConfig } from 'vite'
+// import react from '@vitejs/plugin-react'
+
+// export default defineConfig({
+//   plugins: [react()],
+//   base: "./",
+// })
+
+
+// vite.config.js
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  base: "./",
+  base: '/carhub_rentals/', // 👈 important for GitHub Pages
 })
-
