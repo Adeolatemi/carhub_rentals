@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import "./OurFleet.css";
+import { getImagePath } from "../utils/getImagePath"; // 👈 import helper
 
 const fleetData = [
   {
     id: 1,
     name: "Lexus RX 350",
-    image: "/images/2021_lexus_rx-350_.avif",
+    image: "2021_lexus_rx-350_.avif",
     category: "Luxury",
     price: 150,
     transmission: "Automatic",
@@ -15,7 +16,7 @@ const fleetData = [
   {
     id: 2,
     name: "Toyota Alphard",
-    image: "/images/alphard_w1920_02.jpg",
+    image: "alphard_w1920_02.jpg",
     category: "Luxury",
     price: 180,
     transmission: "Automatic",
@@ -25,7 +26,7 @@ const fleetData = [
   {
     id: 3,
     name: "Toyota Prado",
-    image: "/images/car_1.jpg",
+    image: "car_1.jpg",
     category: "SUV",
     price: 120,
     transmission: "Automatic",
@@ -35,7 +36,7 @@ const fleetData = [
   {
     id: 4,
     name: "Honda Civic",
-    image: "/images/car_2.jpg",
+    image: "car_2.jpg",
     category: "Sedan",
     price: 60,
     transmission: "Automatic",
@@ -64,9 +65,7 @@ function OurFleet() {
   };
 
   const total =
-    selectedCar && calculateDays()
-      ? calculateDays() * selectedCar.price
-      : 0;
+    selectedCar && calculateDays() ? calculateDays() * selectedCar.price : 0;
 
   return (
     <div className="fleet-container">
@@ -89,7 +88,7 @@ function OurFleet() {
       <div className="fleet-grid">
         {filteredCars.map((car) => (
           <div className="fleet-card" key={car.id}>
-            <img src={car.image} alt={car.name} />
+            <img src={getImagePath(car.image)} alt={car.name} /> {/* 👈 fixed */}
             <h3>{car.name}</h3>
             <p className="price">${car.price} / day</p>
             <button
@@ -114,7 +113,7 @@ function OurFleet() {
               ×
             </span>
 
-            <img src={selectedCar.image} alt={selectedCar.name} />
+            <img src={getImagePath(selectedCar.image)} alt={selectedCar.name} /> {/* 👈 fixed */}
             <h2>{selectedCar.name}</h2>
             <p>Category: {selectedCar.category}</p>
             <p>Transmission: {selectedCar.transmission}</p>
@@ -141,9 +140,7 @@ function OurFleet() {
                 Total: <strong>${total}</strong>
               </div>
 
-              <button className="confirm-btn">
-                Confirm Booking
-              </button>
+              <button className="confirm-btn">Confirm Booking</button>
             </div>
           </div>
         </div>

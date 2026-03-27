@@ -1,24 +1,28 @@
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
-dotenv.config();
+import path from "path";
+import multer from "multer";
 
 import healthRouter from "./routes/health";
 import authRoutes from "./routes/auth";
 import adminRouter from "./routes/admin";
 import vehiclesRouter from "./routes/vehicles";
+import subscriptionsRouter from "./routes/subscriptions";
 import ordersRouter from "./routes/orders";
 import usersRouter from "./routes/users";
-import path from "path";
 
-export const app = express();
+dotenv.config();
+
+const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 app.use(express.json());
+app.use(cookieParser());
 
 // Parse multipart/form-data for file uploads
-import multer from "multer";
 app.use(multer().any());
 
 // Routes
@@ -26,11 +30,13 @@ app.use("/health", healthRouter);
 app.use("/auth", authRoutes);
 app.use("/admin", adminRouter);
 app.use("/vehicles", vehiclesRouter);
+app.use("/subscriptions", subscriptionsRouter);
 app.use("/orders", ordersRouter);
 app.use("/users", usersRouter);
 
-// Serve uploaded files
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 // Root endpoint
-app.get("/", (req, res) => res.json({ ok: true, service: "carhub-server" }));
+app.get("/", (_req, res) => res.json({ ok: true, service: "carhub-server" }));
+
+export default app;

@@ -1,139 +1,406 @@
-// import { useState } from "react";
-// import Step1Identity from "../components/booking/Step1Identity";
-// import Step2Rental from "../components/booking/Step2Rental";
-// import Step3Insurance from "../components/booking/Step3Insurance";
+import React, { useState, useEffect, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import useAuth from "../hooks/useAuth";
+import api from "../api/index.js";
+import countryCodes from "../data/countryCodes.js";
 
-// export default function BookingPage() {
-//   const [step, setStep] = useState(1);
+const timeOptions = Array.from({ length: 24 }, (_, h) =>
+  ["00", "30"].map((m) => {
+    const val = `${String(h).padStart(2, "0")}:${m}`;
+    const hour12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+    const ampm = h < 12 ? "AM" : "PM";
+    return { val, label: `${String(hour12).padStart(2, "0")}:${m} ${ampm}` };
+  })
+).flat();
 
-//   const next = () => setStep(step + 1);
-//   const back = () => setStep(step - 1);
-
-//   return (
-//     <div className="min-h-screen bg-slate-950 text-white pt-24 px-6">
-//       <div className="max-w-3xl mx-auto bg-slate-900 p-8 rounded-lg shadow-lg">
-
-//         <h1 className="text-2xl font-bold mb-6">
-//           Car Rental Booking
-//         </h1>
-
-//         {step === 1 && <Step1Identity next={next} />}
-//         {step === 2 && <Step2Rental next={next} back={back} />}
-//         {step === 3 && <Step3Insurance back={back} />}
-
-//       </div>
-//     </div>
-//   );
-// }
-import { useState } from "react"
-import StepOneIdentity from "../components/booking/Step1Identity"
-import StepTwoRental from "../components/booking/Step2Rental"
-import StepThreePayment from "../components/booking/Step3Insurance"
-import BookingProgress from "../components/BookingProgress"
-import { useAuth } from "../contexts/AuthContext"
-import { useNavigate } from "react-router-dom"
+const inputCls = "border border-gray-300 p-3 rounded-lg font-body w-full focus:outline-none focus:ring-2 focus:ring-primary";
+const labelCls = "block font-body text-sm font-semibold text-neutralDark mb-1";
 
 export default function Booking() {
-  const { user } = useAuth()
-  const navigate = useNavigate()
-  const [step, setStep] = useState(1)
-  const [bookingData, setBookingData] = useState({})
-  const [requireAuth, setRequireAuth] = useState(false)
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  // Check if user needs to login before final submission
-  const checkAuthAndProceed = () => {
-    if (!user) {
-      setRequireAuth(true)
-      return false
+  const [phonePrefix, setPhonePrefix] = useState("+234");
+  const [idFile, setIdFile] = useState(null);
+  const [idPreview, setIdPreview] = useState(null);
+  const fileInputRef = useRef(null);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setIdFile(file);
+    setIdPreview(file.type.startsWith("image/") ? URL.createObjectURL(file) : null);
+  };
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    phone: "",
+    email: "",
+    pickupLocation: "",
+    pickupDate: "",
+    pickupTime: "",
+    dropoffLocation: "",
+    dropoffDate: "",
+    dropoffTime: "",
+    carType: "",
+    serviceType: "",
+    driver: "",
+    passengers: "",
+    requests: "",
+  });
+
+  const [errors, setErrors] = useState({});
+  const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    if (!user) navigate("/login");
+  }, [user, navigate]);
+
+  useEffect(() => {
+    if (location.state) {
+      const nameParts = (location.state.name || "").split(" ");
+      setFormData((prev) => ({
+        ...prev,
+        firstName: nameParts[0] || "",
+        lastName: nameParts.slice(1).join(" ") || "",
+        phone: location.state.phone || "",
+        pickupLocation: location.state.pickup || "",
+        pickupDate: location.state.date || "",
+        pickupTime: location.state.time || "",
+        dropoffLocation: location.state.destination || "",
+        dropoffDate: location.state.date || "",
+        dropoffTime: location.state.time || "",
+        carType: location.state.carType || "",
+      }));
     }
-    return true
-  }
+  }, [location.state]);
 
-  // Handle login redirect
-  const handleLoginRedirect = () => {
-    navigate("/login")
-  }
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
 
-  // Handle signup redirect
-  const handleSignupRedirect = () => {
-    navigate("/signup")
-  }
+  const validate = () => {
+    const e = {};
+    if (!formData.firstName) e.firstName = "First name is required";
+    if (!formData.lastName) e.lastName = "Last name is required";
+    if (!formData.phone) e.phone = "Phone number is required";
+    if (!formData.email) e.email = "Email is required";
+    if (!formData.pickupLocation) e.pickupLocation = "Pickup location is required";
+    if (!formData.pickupDate) e.pickupDate = "Pickup date is required";
+    if (!formData.pickupTime) e.pickupTime = "Pickup time is required";
+    if (!formData.dropoffLocation) e.dropoffLocation = "Drop-off location is required";
+    if (!formData.dropoffDate) e.dropoffDate = "Drop-off date is required";
+    if (!formData.dropoffTime) e.dropoffTime = "Drop-off time is required";
+    if (!formData.carType) e.carType = "Car type is required";
+    if (!formData.serviceType) e.serviceType = "Service type is required";
+    if (!formData.driver) e.driver = "Please select driver preference";
+    if (!idFile) e.idFile = "Please upload a valid ID document";
+    return e;
+  };
 
-  // Clear auth requirement and proceed
-  const clearAuthRequirement = () => {
-    setRequireAuth(false)
-  }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      setSubmitted(false);
+      return;
+    }
+    setErrors({});
+    setSubmitted(true);
+    try {
+      const form = new FormData();
+      form.append("firstName", formData.firstName);
+      form.append("lastName", formData.lastName);
+      form.append("email", formData.email);
+      form.append("phone", `${phonePrefix}${formData.phone}`);
+      form.append("pickupLocation", formData.pickupLocation);
+      form.append("dropoffLocation", formData.dropoffLocation);
+      form.append("pickupDate", formData.pickupDate);
+      form.append("pickupTime", formData.pickupTime);
+      form.append("dropoffDate", formData.dropoffDate);
+      form.append("dropoffTime", formData.dropoffTime);
+      form.append("carType", formData.carType);
+      form.append("serviceType", formData.serviceType);
+      form.append("driver", formData.driver);
+      if (formData.passengers) form.append("passengers", formData.passengers);
+      if (formData.requests) form.append("requests", formData.requests);
+      if (location.state?.vehicleId) form.append("vehicleId", location.state.vehicleId);
+      if (idFile) form.append("idDocument", idFile);
 
-  const nextStep = (data) => {
-    setBookingData({...bookingData, ...data})
-    setStep(step + 1)
-  }
+      const { data } = await api.post("/orders/request", form, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
-  const prevStep = () => {
-    setStep(step - 1)
-  }
-
-  // Show auth requirement modal if user needs to login
-  if (requireAuth) {
-    return (
-      <div className="min-h-screen bg-gray-50 pt-20 px-6">
-        <div className="max-w-md mx-auto bg-white shadow-lg rounded-xl p-8 text-center">
-          <div className="mb-6">
-            <svg className="w-16 h-16 mx-auto text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-          </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Login Required</h2>
-          <p className="text-gray-600 mb-6">
-            You must be logged in to complete your booking. This helps us maintain a record of our users and provide better service.
-          </p>
-          <div className="space-y-3">
-            <button
-              onClick={handleLoginRedirect}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
-            >
-              Login
-            </button>
-            <button
-              onClick={handleSignupRedirect}
-              className="w-full border-2 border-blue-600 text-blue-600 py-3 rounded-lg font-semibold hover:bg-blue-50 transition"
-            >
-              Sign Up
-            </button>
-            <button
-              onClick={clearAuthRequirement}
-              className="w-full text-gray-500 py-2 hover:text-gray-700 transition"
-            >
-              Continue as Guest (Booking will be saved)
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
+      // Redirect to Paystack payment page
+      window.location.href = data.authorization_url;
+    } catch (error) {
+      console.error("Booking failed:", error);
+      setErrors({ submit: error.response?.data?.error || "Booking failed. Please try again." });
+      setSubmitted(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10">
-      <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-xl p-8">
-        <BookingProgress step={step} />
+    <section className="bg-neutralLight min-h-screen py-12 px-4">
+      <div className="bg-white shadow-xl rounded-2xl p-8 max-w-4xl mx-auto">
+        <h2 className="font-heading text-3xl font-extrabold mb-2 text-center text-primary">
+          Book Your Ride
+        </h2>
+        <p className="font-body text-center text-gray-400 text-sm mb-8">
+          Fill in the details below and we'll get you moving.
+        </p>
 
-        {step === 1 && <StepOneIdentity nextStep={nextStep} />}
-
-        {step === 2 && (
-          <StepTwoRental 
-            nextStep={nextStep} 
-            prevStep={prevStep}
-          />
+        {errors.submit && (
+          <p className="text-red-600 font-body text-center mb-4 p-4 bg-red-50 rounded">
+            ❌ {errors.submit}
+          </p>
+        )}
+        {submitted && !errors.submit && (
+          <p className="text-green-600 font-body text-center mb-4 p-4 bg-green-50 rounded">
+            ✅ Redirecting to payment...
+          </p>
         )}
 
-        {step === 3 && (
-          <StepThreePayment 
-            bookingData={bookingData}
-            prevStep={prevStep}
-            checkAuth={checkAuthAndProceed}
-          />
-        )}
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+          {/* First Name */}
+          <div>
+            <label className={labelCls}>First Name <span className="text-accent">*</span></label>
+            <input
+              type="text" name="firstName" placeholder="e.g. John"
+              value={formData.firstName} onChange={handleChange} className={inputCls}
+            />
+            {errors.firstName && <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>}
+          </div>
+
+          {/* Last Name */}
+          <div>
+            <label className={labelCls}>Last Name <span className="text-accent">*</span></label>
+            <input
+              type="text" name="lastName" placeholder="e.g. Doe"
+              value={formData.lastName} onChange={handleChange} className={inputCls}
+            />
+            {errors.lastName && <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>}
+          </div>
+
+          {/* Phone with country prefix */}
+          <div>
+            <label className={labelCls}>Phone Number <span className="text-accent">*</span></label>
+            <div className="flex gap-2">
+              <select
+                value={phonePrefix}
+                onChange={(e) => setPhonePrefix(e.target.value)}
+                className="border border-gray-300 p-3 rounded-lg font-body focus:outline-none focus:ring-2 focus:ring-primary w-36 shrink-0"
+              >
+                {countryCodes.map((c) => (
+                  <option key={c.code} value={c.prefix}>
+                    {c.code} {c.prefix}
+                  </option>
+                ))}
+              </select>
+              <input
+                type="tel" name="phone" placeholder="801 234 5678"
+                value={formData.phone} onChange={handleChange}
+                className={inputCls}
+              />
+            </div>
+            {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
+          </div>
+
+          {/* Email */}
+          <div>
+            <label className={labelCls}>Email Address <span className="text-accent">*</span></label>
+            <input
+              type="email" name="email" placeholder="e.g. john@email.com"
+              value={formData.email} onChange={handleChange} className={inputCls}
+            />
+            {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+          </div>
+
+          {/* Pickup Location */}
+          <div>
+            <label className={labelCls}>Pickup Location <span className="text-accent">*</span></label>
+            <input
+              type="text" name="pickupLocation" placeholder="e.g. Murtala Muhammed Airport, Lagos"
+              value={formData.pickupLocation} onChange={handleChange} className={inputCls}
+            />
+            {errors.pickupLocation && <p className="text-red-500 text-xs mt-1">{errors.pickupLocation}</p>}
+          </div>
+
+          {/* Drop-off Location */}
+          <div>
+            <label className={labelCls}>Drop-off Location <span className="text-accent">*</span></label>
+            <input
+              type="text" name="dropoffLocation" placeholder="e.g. Victoria Island, Lagos"
+              value={formData.dropoffLocation} onChange={handleChange} className={inputCls}
+            />
+            {errors.dropoffLocation && <p className="text-red-500 text-xs mt-1">{errors.dropoffLocation}</p>}
+          </div>
+
+          {/* Pickup Date */}
+          <div>
+            <label className={labelCls}>Pickup Date <span className="text-accent">*</span></label>
+            <input
+              type="date" name="pickupDate"
+              value={formData.pickupDate} onChange={handleChange} className={inputCls}
+            />
+            {errors.pickupDate && <p className="text-red-500 text-xs mt-1">{errors.pickupDate}</p>}
+          </div>
+
+          {/* Pickup Time */}
+          <div>
+            <label className={labelCls}>Pickup Time <span className="text-accent">*</span></label>
+            <select name="pickupTime" value={formData.pickupTime} onChange={handleChange} className={inputCls}>
+              <option value="">Select pickup time</option>
+              {timeOptions.map(({ val, label }) => (
+                <option key={val} value={val}>{label}</option>
+              ))}
+            </select>
+            {errors.pickupTime && <p className="text-red-500 text-xs mt-1">{errors.pickupTime}</p>}
+          </div>
+
+          {/* Drop-off Date */}
+          <div>
+            <label className={labelCls}>Drop-off Date <span className="text-accent">*</span></label>
+            <input
+              type="date" name="dropoffDate"
+              value={formData.dropoffDate} onChange={handleChange} className={inputCls}
+            />
+            {errors.dropoffDate && <p className="text-red-500 text-xs mt-1">{errors.dropoffDate}</p>}
+          </div>
+
+          {/* Drop-off Time */}
+          <div>
+            <label className={labelCls}>Drop-off Time <span className="text-accent">*</span></label>
+            <select name="dropoffTime" value={formData.dropoffTime} onChange={handleChange} className={inputCls}>
+              <option value="">Select drop-off time</option>
+              {timeOptions.map(({ val, label }) => (
+                <option key={val} value={val}>{label}</option>
+              ))}
+            </select>
+            {errors.dropoffTime && <p className="text-red-500 text-xs mt-1">{errors.dropoffTime}</p>}
+          </div>
+
+          {/* Car Type */}
+          <div>
+            <label className={labelCls}>Car Type <span className="text-accent">*</span></label>
+            <select name="carType" value={formData.carType} onChange={handleChange} className={inputCls}>
+              <option value="">Select car type</option>
+              <option>Saloon</option>
+              <option>SUV</option>
+              <option>Luxury Sedan</option>
+              <option>Bus</option>
+            </select>
+            {errors.carType && <p className="text-red-500 text-xs mt-1">{errors.carType}</p>}
+          </div>
+
+          {/* Service Type */}
+          <div>
+            <label className={labelCls}>Service Type <span className="text-accent">*</span></label>
+            <select name="serviceType" value={formData.serviceType} onChange={handleChange} className={inputCls}>
+              <option value="">Select service type</option>
+              <option>Airport Transfer</option>
+              <option>Wedding</option>
+              <option>Corporate Event</option>
+              <option>City Tour</option>
+              <option>Others</option>
+            </select>
+            {errors.serviceType && <p className="text-red-500 text-xs mt-1">{errors.serviceType}</p>}
+          </div>
+
+          {/* Driver */}
+          <div>
+            <label className={labelCls}>Driver Required? <span className="text-accent">*</span></label>
+            <select name="driver" value={formData.driver} onChange={handleChange} className={inputCls}>
+              <option value="">Select an option</option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+            {errors.driver && <p className="text-red-500 text-xs mt-1">{errors.driver}</p>}
+          </div>
+
+          {/* ID Upload */}
+          <div className="col-span-2">
+            <label className={labelCls}>
+              Driver's Licence / ID Document <span className="text-accent">*</span>
+            </label>
+            <p className="text-xs text-gray-400 font-body mb-2">
+              Upload your Driver's Licence, National ID, International Passport or any valid means of identification.
+            </p>
+
+            {/* Hidden real file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*,application/pdf"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+
+            {/* Clickable upload zone */}
+            <div
+              onClick={() => fileInputRef.current.click()}
+              className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-primary hover:bg-blue-50 transition"
+            >
+              {idPreview ? (
+                <img src={idPreview} alt="ID preview" className="h-28 object-contain rounded-lg pointer-events-none" />
+              ) : idFile ? (
+                <div className="flex flex-col items-center gap-1 pointer-events-none">
+                  <span className="text-3xl">📄</span>
+                  <span className="text-sm font-body text-gray-600">{idFile.name}</span>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-1 text-gray-400 pointer-events-none">
+                  <span className="text-3xl">📁</span>
+                  <span className="text-sm font-body">Click to upload (JPG, PNG, PDF)</span>
+                  <span className="text-xs font-body">Max 5MB</span>
+                </div>
+              )}
+            </div>
+
+            {idFile && (
+              <button
+                type="button"
+                onClick={() => { setIdFile(null); setIdPreview(null); fileInputRef.current.value = ""; }}
+                className="mt-2 text-xs text-red-500 hover:underline font-body"
+              >
+                ✕ Remove file
+              </button>
+            )}
+            {errors.idFile && <p className="text-red-500 text-xs mt-1">{errors.idFile}</p>}
+          </div>
+
+          {/* Passengers */}
+          <div>
+            <label className={labelCls}>Passengers</label>
+            <input
+              type="number" name="passengers" placeholder="e.g. 3" min="1"
+              value={formData.passengers} onChange={handleChange} className={inputCls}
+            />
+          </div>
+
+          {/* Special Requests */}
+          <div className="col-span-2">
+            <label className={labelCls}>Special Requests</label>
+            <textarea
+              name="requests" placeholder="Any special requests or notes..."
+              maxLength={500} value={formData.requests} onChange={handleChange}
+              className="border border-gray-300 p-3 rounded-lg font-body w-full h-32 resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+            ></textarea>
+          </div>
+
+          <button
+            type="submit"
+            className="col-span-2 bg-primary text-white py-3 rounded-lg font-heading font-bold tracking-wide hover:bg-blue-900 transition disabled:opacity-60"
+            disabled={submitted}
+          >
+            Book My Ride Now
+          </button>
+        </form>
       </div>
-    </div>
-  )
+    </section>
+  );
 }

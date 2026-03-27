@@ -6,23 +6,46 @@ export default function Kyc() {
   const [file, setFile] = useState(null);
   const [msg, setMsg] = useState("");
 
-  async function submit(e) {
+async function submit(e) {
     e.preventDefault();
     if (!file) { setMsg("Please select a file"); return; }
     const fd = new FormData();
     fd.append("document", file);
     const token = localStorage.getItem("token");
+    const baseUrl = import.meta.env.VITE_API_BASE || "/api"; // Use proxy /api -> server
     try {
-      const res = await fetch((import.meta.env.VITE_API_BASE || "http://localhost:4000") + "/users/me/kyc", { method: "POST", body: fd, headers: token ? { Authorization: `Bearer ${token}` } : {} });
-      const data = await res.json();
+      const res = await fetch(baseUrl + "/users/me/kyc", { 
+        method: "POST", 
+        body: fd, 
+        headers: token ? { Authorization: `Bearer ${token}` } : {} 
+      });
+      
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        const text = await res.text();
+        throw new Error(`Server error ${res.status}: ${text.substring(0, 200)}`);
+      }
+      
       if (!res.ok) throw data;
+      
       setMsg("KYC uploaded — status pending");
       // reload user
-      const me = await fetch((import.meta.env.VITE_API_BASE || "http://localhost:4000") + "/users/me", { headers: token ? { Authorization: `Bearer ${token}` } : {} });
-      const meData = await me.json();
+      const meRes = await fetch(baseUrl + "/users/me", { 
+        headers: token ? { Authorization: `Bearer ${token}` } : {} 
+      });
+      
+      let meData;
+      try {
+        meData = await meRes.json();
+      } catch {
+        throw new Error("Failed to fetch updated user profile");
+      }
       setUser(meData);
     } catch (err) {
-      setMsg(err.error || "Upload failed");
+      console.error("KYC upload error:", err);
+      setMsg(err.message || err.error || "Upload failed");
     }
   }
 

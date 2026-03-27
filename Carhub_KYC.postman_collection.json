@@ -1,0 +1,76 @@
+{
+  "info": {
+    "name": "Carhub KYC API",
+    "_postman_id": "carhub-kyc-api-collection",
+    "description": "Collection of Carhub KYC endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get Current User Profile",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+        ],
+        "url": { "raw": "http://localhost:3000/users/me", "protocol": "http", "host": ["localhost"], "port": "3000", "path": ["users", "me"] }
+      }
+    },
+    {
+      "name": "Upload KYC Document",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "document", "type": "file", "src": "" }
+          ]
+        },
+        "url": { "raw": "http://localhost:3000/users/me/kyc", "protocol": "http", "host": ["localhost"], "port": "3000", "path": ["users", "me", "kyc"] }
+      }
+    },
+    {
+      "name": "Get User KYC History",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{adminToken}}", "type": "text" }
+        ],
+        "url": { "raw": "http://localhost:3000/users/{{userId}}/kyc-history", "protocol": "http", "host": ["localhost"], "port": "3000", "path": ["users", "{{userId}}", "kyc-history"] }
+      }
+    },
+    {
+      "name": "Update User KYC Status",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{adminToken}}", "type": "text" },
+          { "key": "Content-Type", "value": "application/json", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"status\": \"APPROVED\" }"
+        },
+        "url": { "raw": "http://localhost:3000/users/{{userId}}/kyc-status", "protocol": "http", "host": ["localhost"], "port": "3000", "path": ["users", "{{userId}}", "kyc-status"] }
+      }
+    },
+    {
+      "name": "Admin Dashboard KYC",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{adminToken}}", "type": "text" }
+        ],
+        "url": { "raw": "http://localhost:3000/users/dashboard/kyc", "protocol": "http", "host": ["localhost"], "port": "3000", "path": ["users", "dashboard", "kyc"] }
+      }
+    }
+  ],
+  "variable": [
+    { "key": "token", "value": "" },
+    { "key": "adminToken", "value": "" },
+    { "key": "userId", "value": "" }
+  ]
+}

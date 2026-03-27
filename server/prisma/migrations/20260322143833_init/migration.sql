@@ -6,8 +6,6 @@ CREATE TABLE "User" (
     "name" TEXT,
     "role" TEXT NOT NULL DEFAULT 'CUSTOMER',
     "isActive" BOOLEAN NOT NULL DEFAULT true,
-    "kycStatus" TEXT,
-    "kycFile" TEXT,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL
 );
@@ -26,15 +24,22 @@ CREATE TABLE "Vehicle" (
     "dailyRate" REAL NOT NULL,
     "available" BOOLEAN NOT NULL DEFAULT true,
     "categoryId" TEXT,
+    "ownerId" TEXT,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "Vehicle_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "VehicleCategory" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+    CONSTRAINT "Vehicle_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "VehicleCategory" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT "Vehicle_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 -- CreateTable
-CREATE TABLE "Order" (
+CREATE TABLE "CarBooking" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "userId" TEXT NOT NULL,
-    "vehicleId" TEXT NOT NULL,
+    "vehicleId" TEXT,
+    "fullName" TEXT NOT NULL,
+    "phone" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "pickupLocation" TEXT NOT NULL,
+    "dropoffLocation" TEXT NOT NULL,
     "startDate" DATETIME NOT NULL,
     "endDate" DATETIME NOT NULL,
     "totalAmount" REAL NOT NULL,
@@ -42,27 +47,29 @@ CREATE TABLE "Order" (
     "adminNote" TEXT,
     "canceledReason" TEXT,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "Order_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+    CONSTRAINT "CarBooking_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "CarBooking_vehicleId_fkey" FOREIGN KEY ("vehicleId") REFERENCES "Vehicle" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 -- CreateTable
 CREATE TABLE "OrderAttachment" (
     "id" TEXT NOT NULL PRIMARY KEY,
-    "orderId" TEXT NOT NULL,
+    "bookingId" TEXT NOT NULL,
     "path" TEXT NOT NULL,
     "type" TEXT,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "OrderAttachment_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "Order" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+    CONSTRAINT "OrderAttachment_bookingId_fkey" FOREIGN KEY ("bookingId") REFERENCES "CarBooking" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 -- CreateTable
 CREATE TABLE "Transaction" (
     "id" TEXT NOT NULL PRIMARY KEY,
-    "orderId" TEXT NOT NULL,
+    "bookingId" TEXT NOT NULL,
     "provider" TEXT NOT NULL,
     "providerRef" TEXT,
     "amount" REAL NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "Transaction_bookingId_fkey" FOREIGN KEY ("bookingId") REFERENCES "CarBooking" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 -- CreateTable
@@ -101,6 +108,19 @@ CREATE TABLE "PartnerDetails" (
     CONSTRAINT "PartnerDetails_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
+-- CreateTable
+CREATE TABLE "Subscription" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "userId" TEXT NOT NULL,
+    "plan" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'TRIAL',
+    "startDate" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "endDate" DATETIME,
+    "transactionRef" TEXT,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "Subscription_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
@@ -118,3 +138,6 @@ CREATE UNIQUE INDEX "VehicleFeature_vehicleId_featureId_key" ON "VehicleFeature"
 
 -- CreateIndex
 CREATE UNIQUE INDEX "PartnerDetails_userId_key" ON "PartnerDetails"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Subscription_userId_key" ON "Subscription"("userId");

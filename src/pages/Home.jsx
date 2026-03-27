@@ -1,202 +1,246 @@
-import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { getImagePath } from "../utils/getImagePath";
 
-// const SLIDE_IMAGES = [
-//   "/images/back_drop.jpg",
-//   "/images/background_image.jpg"
-const SLIDE_IMAGES = [
-  `${import.meta.env.BASE_URL}images/back_drop.jpg`,
-  `${import.meta.env.BASE_URL}images/background_image.jpg`
+const Home = () => {
+  const navigate = useNavigate();
 
-];
+  const [formData, setFormData] = useState({
+    name: '',
+    phone: '',
+    pickup: '',
+    destination: '',
+    carType: '',
+    date: '',
+    time: ''
+  });
 
-export default function Home() {
-  const [currentSlide, setCurrentSlide] = useState(0);
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % SLIDE_IMAGES.length);
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, []);
-
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    navigate('/booking', { state: formData });
+  };
   return (
-    <div className="min-h-screen">
+    <div className="font-body text-neutralDark">
 
-      {/* HERO SLIDESHOW */}
-      <div className="relative h-[500px] md:h-[600px] overflow-hidden">
+      {/* Hero Section */}
+      <section
+        className="relative w-full h-screen bg-cover bg-center"
 
-        {SLIDE_IMAGES.map((image, index) => (
-          <div
-            key={index}
-            className={`absolute inset-0 transition-opacity duration-1000 ${
-              index === currentSlide ? "opacity-100" : "opacity-0"
-            }`}
-          >
-            <img
-              src={image}
-              alt={`Slide ${index + 1}`}
-              className="w-full h-full object-cover"
-            />
+        style={{
+          backgroundImage: `url(${getImagePath("vintage_car.jpg")})`,
+        }}
+      >
+        <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-center items-center text-center text-white px-6">
+          <h1 className="text-6xl md:text-7xl font-extrabold mb-6">
+            Premium Car Hire Service in Lagos
+          </h1>
 
-            <div className="absolute inset-0 bg-black/40"></div>
+          <p className="text-2xl md:text-3xl mb-8">
+            Comfort, Style, and Reliability 24/7
+          </p>
+
+          <div className="flex gap-4">
+            <Link to="/booking" className="bg-accent px-8 py-4 rounded-lg hover:bg-yellow-600 inline-block">
+              Book Now
+            </Link>
+
+            <button className="bg-white text-primary px-8 py-4 rounded-lg">
+              WhatsApp Us
+            </button>
           </div>
-        ))}
+        </div>
+      </section>
 
-        {/* SLIDE INDICATORS */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
-          {SLIDE_IMAGES.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentSlide(index)}
-              className={`w-3 h-3 rounded-full transition-all ${
-                index === currentSlide ? "bg-white w-8" : "bg-white/50"
-              }`}
-            />
+      {/* Booking Form */}
+      <section className="bg-white shadow-lg rounded-lg p-10 max-w-4xl mx-auto -mt-16 relative z-10">
+        <h2 className="text-4xl font-bold mb-8 text-center text-primary">
+          Book Your Ride
+        </h2>
+
+        <form
+          onSubmit={handleSubmit}
+          className="grid md:grid-cols-2 gap-6"
+        >
+<input name="name" placeholder="Full Name" value={formData.name} onChange={handleChange} className="border p-4 rounded" />
+<input name="phone" placeholder="Phone Number" value={formData.phone} onChange={handleChange} className="border p-4 rounded" />
+<input name="pickup" placeholder="Pickup Location" value={formData.pickup} onChange={handleChange} className="border p-4 rounded" />
+<input name="destination" placeholder="Destination" value={formData.destination} onChange={handleChange} className="border p-4 rounded" />
+
+          <select name="carType" value={formData.carType} onChange={handleChange} className="border p-4 rounded">
+            <option value="">Select Car Type</option>
+            <option>Saloon</option>
+            <option>SUV</option>
+            <option>Luxury Sedan</option>
+            <option>Bus</option>
+          </select>
+
+          <input type="date" name="date" value={formData.date} onChange={handleChange} className="border p-4 rounded" />
+          <input type="time" name="time" value={formData.time} onChange={handleChange} className="border p-4 rounded" />
+
+          <button className="col-span-2 bg-primary text-white py-4 rounded-lg">
+            Book My Ride Now
+          </button>
+        </form>
+      </section>
+
+      {/* Fleet */}
+      <section className="py-20 bg-neutralLight">
+        <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 text-primary">
+          Our Fleet
+        </h2>
+
+        <div className="flex gap-6 overflow-x-auto px-6 pb-4 scrollbar-hide">
+          {[
+            { id: 1, name: "Toyota Highlander", image: "toyota_highlander.jpg" },
+            { id: 2, name: "Toyota Prado", image: "toyota_prado.jpg" },
+            { id: 3, name: "Toyota Van", image: "toyota_van.jpg" },
+            { id: 4, name: "Toyota HD", image: "hd_toyota.jpg" },
+          ].map((car) => (
+            <div
+              key={car.id}
+              className="bg-white shadow-lg rounded-xl overflow-hidden hover:scale-105 transition-transform flex-shrink-0 w-72"
+            >
+              <img
+                src={getImagePath(car.image)}
+                alt={car.name}
+                className="w-full h-48 object-cover"
+              />
+              <div className="p-5">
+                <h3 className="font-heading text-xl font-semibold mb-2">{car.name}</h3>
+                <p className="font-body text-gray-500 text-sm mb-4">From ₦25,000/day</p>
+                <Link
+                  to="/booking"
+                  className="block text-center bg-accent text-white px-4 py-2 rounded-lg hover:bg-yellow-600 font-body text-sm font-semibold transition"
+                >
+                  Book Now
+                </Link>
+              </div>
+            </div>
           ))}
         </div>
 
-        {/* HERO TEXT */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center text-white px-4 max-w-4xl">
+        <div className="text-center mt-10">
+          <Link
+            to="/fleet"
+            className="inline-flex items-center gap-2 bg-primary text-white font-heading font-bold px-8 py-3 rounded-xl hover:bg-blue-900 transition shadow-lg"
+          >
+            More Fleet <span className="text-accent text-lg">→</span>
+          </Link>
+        </div>
+      </section>
 
-            <h1 className="text-4xl md:text-6xl font-bold mb-4">
-              CarHub Car Rental
-            </h1>
+      {/* About */}
+      <section className="py-24 bg-white">
+        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center px-6">
+          <div>
+            <h2 className="text-4xl font-bold mb-6 text-primary">
+              About CarHub Rentals
+            </h2>
 
-            <p className="text-xl md:text-2xl mb-8 opacity-90">
-              Rent a car for your next adventure
+            <p className="text-xl text-gray-700 mb-6">
+              Reliable, affordable, and stylish car hire services across Lagos.
             </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-
-              <Link
-                to="/fleet/1"
-                className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition text-lg"
-              >
-                Browse Fleet
-              </Link>
-
-              <Link
-                to="/booking"
-                className="bg-white text-gray-800 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition text-lg"
-              >
-                Book Now
-              </Link>
-
-            </div>
-
-          </div>
-        </div>
-      </div>
-
-
-      {/* WHY CHOOSE US */}
-      <section className="bg-gray-50 py-16 px-4">
-
-        <div className="max-w-6xl mx-auto">
-
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
-            Why Choose CarHub?
-          </h2>
-
-          <p className="text-center text-gray-600 mb-12">
-            We offer the best car rental deals for your travel needs
-          </p>
-
-          <div className="grid md:grid-cols-3 gap-8">
-
-            <Feature icon="🚗" title="Wide Selection" desc="Choose from economy to luxury vehicles" />
-            <Feature icon="💰" title="Best Prices" desc="Competitive rates with no hidden fees" />
-            <Feature icon="⭐" title="Top Rated Service" desc="Trusted by thousands of customers" />
-
-          </div>
-
-        </div>
-
-      </section>
-
-
-      {/* LOCATIONS */}
-      <section className="bg-white py-16 px-4">
-
-        <div className="max-w-6xl mx-auto">
-
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
-            Popular Rental Locations
-          </h2>
-
-          <p className="text-center text-gray-600 mb-12">
-            Find a car rental near you
-          </p>
-
-          <div className="grid md:grid-cols-4 gap-4">
-
-            {["Lagos", "Abuja", "Port Harcourt", "Ibadan"].map((city, idx) => (
-              <Link
-                key={idx}
-                to="/fleet/1"
-                className="block bg-gray-100 hover:bg-blue-50 rounded-lg p-6 text-center transition"
-              >
-                <h3 className="text-lg font-semibold">{city}</h3>
-                <p className="text-sm text-gray-500">View available cars</p>
-              </Link>
-            ))}
-
-          </div>
-
-        </div>
-
-      </section>
-
-
-      {/* CTA */}
-      <section className="bg-blue-600 py-16 px-4">
-
-        <div className="max-w-4xl mx-auto text-center text-white">
-
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Ready to Book Your Car?
-          </h2>
-
-          <p className="text-blue-100 mb-8">
-            Join thousands of satisfied customers who trust CarHub
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-
-            <Link
-              to="/booking"
-              className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition"
-            >
-              Reserve Now
-            </Link>
 
             <Link
               to="/about"
-              className="border-2 border-white px-8 py-3 rounded-lg font-semibold hover:bg-white/10 transition"
+              className="bg-accent text-white px-6 py-3 rounded-lg"
             >
               Learn More
             </Link>
-
           </div>
 
+          <div className="grid grid-cols-2 gap-6 text-center">
+            <div>100+ Clients</div>
+            <div>5★ Service</div>
+            <div>24/7</div>
+            <div>2 Cities</div>
+          </div>
         </div>
-
       </section>
 
+      {/* Why Choose Us */}
+      <section className="py-24 bg-neutralLight">
+        <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 text-primary">
+          Why Choose Us
+        </h2>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-12 px-6">
+          {[
+            { id: 1, icon: "⏰", title: "24/7 Availability", desc: "Always available." },
+            { id: 2, icon: "👨‍✈️", title: "Professional Chauffeurs", desc: "Experienced drivers." },
+            { id: 3, icon: "🚘", title: "Premium Fleet", desc: "Top vehicles." },
+            { id: 4, icon: "⏱️", title: "Punctual Service", desc: "Always on time." },
+            { id: 5, icon: "💰", title: "Affordable Rates", desc: "No hidden fees." },
+            { id: 6, icon: "⭐", title: "Top Reviews", desc: "Trusted service." },
+          ].map((f) => (
+            <div key={f.id} className="flex items-start gap-6">
+              <span className="text-4xl">{f.icon}</span>
+              <div>
+                <h3 className="text-xl font-semibold text-primary">
+                  {f.title}
+                </h3>
+                <p className="text-gray-700">{f.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-24 bg-blue-50">
+        <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 text-primary">
+          What Our Customers Say
+        </h2>
+
+        <div className="flex gap-8 overflow-x-auto px-6">
+          {[
+            {
+              id: 1,
+              stars: "★★★★★",
+              quote: "Excellent service and clean cars.",
+              name: "Adebayo Johnson",
+            },
+            {
+              id: 2,
+              stars: "★★★★★",
+              quote: "Perfect for my wedding.",
+              name: "Sarah Okafor",
+            },
+            {
+              id: 3,
+              stars: "★★★★★",
+              quote: "Always reliable airport rides.",
+              name: "Michael Adebayo",
+            },
+          ].map((t) => (
+            <div key={t.id} className="bg-white p-6 rounded shadow min-w-[80%]">
+              <p className="text-yellow-500">{t.stars}</p>
+              <p className="italic my-4">"{t.quote}"</p>
+              <p className="font-semibold">{t.name}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="bg-primary text-white py-24 text-center">
+        <h2 className="text-4xl font-bold mb-6">
+          Ready to Book Your Ride?
+        </h2>
+
+        <button className="bg-accent px-8 py-4 rounded-lg">
+          Reserve Now
+        </button>
+      </section>
     </div>
   );
-}
+};
 
-
-function Feature({ icon, title, desc }) {
-  return (
-    <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-      <div className="text-5xl mb-4">{icon}</div>
-      <h3 className="text-xl font-bold mb-2">{title}</h3>
-      <p className="text-gray-600">{desc}</p>
-    </div>
-  );
-}
+export default Home;

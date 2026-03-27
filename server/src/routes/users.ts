@@ -1,63 +1,95 @@
-import { Router } from "express";
-import { PrismaClient } from "@prisma/client";
-import { authenticate, AuthRequest } from "../middleware/auth";
-import multer from "multer";
+// src/routes/users.ts
+import { Router, Request, Response } from "express";
 import path from "path";
 import fs from "fs";
-import { submitKyc } from "../services/smileid";
+// import { prisma } from "../prismaClient"; 
+import { authenticate, AuthRequest } from "../middleware/auth";
+import { prisma } from "../prismaClient";
+import multer from "multer";
 
-const prisma = new PrismaClient();
+const upload = multer();
+
 const router = Router();
 
-const uploadDir = path.join(process.cwd(), "uploads");
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    cb(null, `${Date.now()}_${file.originalname}`);
+// Ensure KYC upload directory exists
+const kycDir = path.join(process.cwd(), "uploads", "kyc");
+if (!fs.existsSync(kycDir)) {
+  fs.mkdirSync(kycDir, { recursive: true });
+}
+
+// POST upload KYC document
+router.post("/me/kyc", authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user?.id) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const files: any[] = (req.files as any) || [];
+    if (!files.length || files[0].fieldname !== "document") {
+      return res.status(400).json({ error: "No document file provided" });
+    }
+
+    const file = files[0];
+    const filename = `kyc_${req.user.id}_${Date.now()}_${file.originalname}`;
+    const filepath = path.join(kycDir, filename);
+
+    // Save file
+    fs.writeFileSync(filepath, file.buffer);
+
+    // Create KYC history record (disabled until Prisma client updated)
+    // await prisma.kycHistory.create({
+    //   data: {
+    //     userId: req.user.id,
+    //     filename,
+    //     status: "PENDING"
+    //   }
+    // });
+
+    // Update user kycFile and status
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: {
+        kycFile: filename,
+        kycStatus: "PENDING"
+      }
+    });
+
+    res.json({ 
+      success: true, 
+      message: "KYC document uploaded successfully",
+      filename 
+    });
+  } catch (err) {
+    console.error("KYC upload error:", err);
+    res.status(500).json({ error: "Upload failed" });
   }
 });
-const upload = multer({ storage });
 
-router.get("/me", authenticate, async (req: AuthRequest, res) => {
+// GET current user
+router.get("/me", authenticate, async (req: AuthRequest, res: Response) => {
   try {
-    const user = await prisma.user.findUnique({ where: { id: req.user.id }, include: { orders: true } });
-    if (!user) return res.status(404).json({ error: "Not found" });
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        isActive: true,
+        // kycStatus: true,
+        // kycFile: true,
+      },
+    });
+
+    if (!user) return res.status(404).json({ error: "User not found" });
+
     res.json(user);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error" });
-  }
-});
-
-// List users (admin)
-router.get("/", authenticate, async (req: AuthRequest, res) => {
-  try {
-    // only allow admin roles to list all users
-    if (!["SUPERADMIN", "ADMIN"].includes(req.user.role)) return res.status(403).json({ error: "Forbidden" });
-    const users = await prisma.user.findMany({ select: { id: true, email: true, name: true, role: true, isActive: true, kycStatus: true } });
-    res.json(users);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error" });
-  }
-});
-
-// KYC upload endpoint (authenticated)
-router.post("/me/kyc", authenticate, upload.single("document"), async (req: AuthRequest, res) => {
-  try {
-    if (!req.file) return res.status(400).json({ error: "Missing file" });
-    const filePath = `/uploads/${req.file.filename}`;
-    // update user record with file path and set kycStatus to PENDING
-    await prisma.user.update({ where: { id: req.user.id }, data: { kycFile: filePath, kycStatus: "PENDING" } });
-    // submit to SmileId (stub)
-    const result = await submitKyc({ userId: req.user.id, filePath });
-    // store provider ref somewhere if needed (not modeled), respond
-    res.json({ ok: true, result });
-  } catch (err) {
-    console.error(err);
+    console.error("Error fetching user:", err);
     res.status(500).json({ error: "Server error" });
   }
 });

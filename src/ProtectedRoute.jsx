@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import useAuth from "./hooks/useAuth";
+import { useAuth } from "./contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 export default function ProtectedRoute({ children, roles }) {
@@ -19,9 +19,8 @@ export default function ProtectedRoute({ children, roles }) {
     }
   }, [user, loading, roles, navigate]);
 
-  if (loading || user === null) {
-    return <div>Loading...</div>;
-  }
+  if (loading) return <div>Loading...</div>;
+  if (!user) return null;
 
   return <>{children}</>;
 }

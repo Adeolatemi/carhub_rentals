@@ -2,6 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 20s linear infinite;
+}
+
 /* ---------------------------------------- */
 /* Dark/Light theme setup */
 @layer base {
@@ -25,6 +38,29 @@
   }
 }
 
+
+@keyframes fadeLoop {
+  0%, 100% { opacity: 0; transform: translateY(10px); }
+  20%, 80% { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeLoop {
+  animation: fadeLoop 6s ease-in-out infinite;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* ---------------------------------------- */
 /* Custom utilities */
 @layer utilities {
@@ -32,6 +68,20 @@
     animation-play-state: paused;
   }
 }
+
+@keyframes zoomIn {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.1); }
+}
+
+.animate-zoomIn {
+  animation: zoomIn 5s ease-in-out forwards;
+}
+
+
+
+
+
 
 /* ---------------------------------------- */
 /* Custom components */

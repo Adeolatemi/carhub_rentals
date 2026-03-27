@@ -1,8 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "../prismaClient";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
@@ -15,13 +13,17 @@ export interface AuthRequest extends Request {
 
 export const authenticate = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
+    // Support both Bearer token (header) and cookie-based auth
+    let token: string | undefined;
     const auth = req.headers.authorization;
-    if (!auth) return res.status(401).json({ error: "Missing authorization" });
-    const parts = auth.split(" ");
-    if (parts.length !== 2 || parts[0] !== "Bearer") return res.status(401).json({ error: "Invalid authorization" });
-    const token = parts[1];
+    if (auth) {
+      const parts = auth.split(" ");
+      if (parts.length === 2 && parts[0] === "Bearer") token = parts[1];
+    }
+    if (!token && req.cookies?.token) token = req.cookies.token;
+    if (!token) return res.status(401).json({ error: "Missing authorization" });
     const payload: any = jwt.verify(token, JWT_SECRET);
-    const user = await prisma.user.findUnique({ where: { id: payload.sub } });
+    const user = await prisma.user.findUnique({ where: { id: payload.id } });
     if (!user || !user.isActive) return res.status(401).json({ error: "Invalid token or user inactive" });
     req.user = user;
     next();

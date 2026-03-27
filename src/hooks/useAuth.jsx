@@ -1,8 +1,10 @@
 import { useContext, useCallback } from "react";
 import { AuthContext } from "../contexts/AuthContext";
 
+// API_URL proxied by Vite: /auth, /users -> localhost:5000
+
 export default function useAuth() {
-  const { user, setUser, logout } = useContext(AuthContext);
+  const { user, logout, fetchUser, loading } = useContext(AuthContext);
 
   const isAdmin = user && ["SUPERADMIN", "ADMIN"].includes(user.role);
   const isPartner = user && user.role === "PARTNER";
@@ -10,9 +12,8 @@ export default function useAuth() {
 
   const refresh = useCallback(async () => {
     if (!user) return;
-    const res = await fetch((import.meta.env.VITE_API_BASE || "http://localhost:4000") + "/users/me", { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-    if (res.ok) setUser(await res.json());
-  }, [user]);
+    await fetchUser();
+  }, [user, fetchUser]);
 
-  return { user, setUser, logout, isAdmin, isPartner, isCustomer, refresh };
+  return { user, logout, loading, isAdmin, isPartner, isCustomer, refresh };
 }

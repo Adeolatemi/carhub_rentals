@@ -1,17 +1,22 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import { app } from "./app";
+import app from "./app"; // import the configured app (with routes/middleware)
 
-// const port = process.env.PORT || 4000;
+import path from "path";
+import express from "express";
 
-// app.listen(Number(port), () => {
-//   console.log(`Server listening on http://localhost:${port}`);
-// });
-
+// Serve static files from the uploads directory
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`Server listening on http://localhost:${PORT}`);
+app.listen(Number(PORT), () => {
+  console.log(`🚀 Server listening on http://localhost:${PORT}`);
+});
+
+// Graceful shutdown
+process.on("SIGINT", () => {
+  console.log("Shutting down...");
+  process.exit(0);
 });

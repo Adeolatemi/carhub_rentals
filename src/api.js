@@ -1,49 +1,103 @@
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:4000";
+// src/api.js
+import axios from "axios";
+import partner from "./api/partner.js"; // optional, if you have partner API
 
-export async function request(path, opts = {}) {
-  const url = `${API_BASE}${path}`;
-  const headers = opts.headers || {};
-  if (localStorage.getItem("token")) headers["Authorization"] = `Bearer ${localStorage.getItem("token")}`;
-  const res = await fetch(url, { ...opts, headers: { "Content-Type": "application/json", ...headers } });
+// --- Proxy-friendly base URL ---
+const API_BASE = "/"; // Vite proxy forwards to backend
+
+// --- Axios instance ---
+const request = axios.create({
+  baseURL: API_BASE,
+  headers: { "Content-Type": "application/json" },
+  withCredentials: true, // include cookies/session auth
+});
+
+// --- Automatically attach token if available ---
+request.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// --- API functions ---
+
+// Login user
+async function login(email, password) {
+  const res = await request.post("/auth/login", { email, password });
+  return res.data;
+}
+
+// Logout user
+async function logout() {
+  const res = await request.post("/auth/logout");
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  return res.data;
+}
+
+// Get current logged-in user
+async function getUser() {
+  const res = await request.get("/auth/me");
+  return res.data;
+}
+
+// Update user profile
+async function updateProfile(profileData) {
+  const res = await request.put("/users/me", profileData);
+  return res.data;
+}
+
+// Generic GET request
+async function get(path) {
+  const res = await request.get(path);
+  return res.data;
+}
+
+// Generic POST request with JSON body
+async function post(path, body) {
+  const res = await request.post(path, body);
+  return res.data;
+}
+
+// Upload file (multipart/form-data)
+async function postForm(path, formData) {
+  const token = localStorage.getItem("token");
+  const res = await fetch(API_BASE + path, {
+    method: "POST",
+    body: formData,
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    credentials: "include",
+  });
+
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw data;
   return data;
 }
 
-// helper to POST FormData (multipart) without overriding Content-Type
-async function postForm(path, formData, opts = {}){
-  const url = `${API_BASE}${path}`
-  const headers = opts.headers || {}
-  if (localStorage.getItem("token")) headers["Authorization"] = `Bearer ${localStorage.getItem("token")}`
-  const res = await fetch(url, { method: opts.method || 'POST', body: formData, headers })
-  const data = await res.json().catch(() => ({}))
-  if (!res.ok) throw data
-  return data
-}
-
-export const auth = {
-  register: (payload) => request(`/auth/register`, { method: "POST", body: JSON.stringify(payload) }),
-  login: (payload) => request(`/auth/login`, { method: "POST", body: JSON.stringify(payload) }),
-  passwordReset: (payload) => request(`/auth/password-reset`, { method: "POST", body: JSON.stringify(payload) }),
+// --- Named exports ---
+export {
+  request,
+  login,
+  logout,
+  getUser,
+  updateProfile,
+  get,
+  post,
+  postForm,
+  partner, // optional
 };
 
-export const vehicles = {
-  list: (q) => request(`/vehicles?${new URLSearchParams(q || {}).toString()}`),
-  get: (id) => request(`/vehicles/${id}`),
-};
-
-export const orders = {
-  request: (payload) => request(`/orders/request`, { method: "POST", body: JSON.stringify(payload) }),
-  requestForm: (formData) => postForm(`/orders/request`, formData),
-  checkout: (orderId) => request(`/orders/checkout/${orderId}`, { method: "POST" }),
-};
-
-export const admin = {
-  createAdmin: (payload) => request(`/admin/admins`, { method: "POST", body: JSON.stringify(payload) }),
-  createPartner: (payload) => request(`/admin/partners`, { method: "POST", body: JSON.stringify(payload) }),
-  toggleUserActive: (id, isActive) => request(`/admin/users/${id}/active`, { method: "PATCH", body: JSON.stringify({ isActive }) }),
-  overview: () => request(`/admin/overview`),
-  updateOrderStatus: (id, payload) => request(`/orders/${id}/status`, { method: "PATCH", body: JSON.stringify(payload) }),
-  createVehicle: (payload) => request(`/vehicles`, { method: "POST", body: JSON.stringify(payload) }),
-  delistVehicle: (id) => request(`/vehicles/${id}/delist`, { method: "PATCH" }),
+// --- Default export (all in one object) ---
+export default {
+  request,
+  login,
+  logout,
+  getUser,
+  updateProfile,
+  get,
+  post,
+  postForm,
+  partner,
 };
