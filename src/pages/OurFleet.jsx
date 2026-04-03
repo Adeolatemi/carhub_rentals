@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import "./OurFleet.css";
-import { getImagePath } from "../utils/getImagePath"; // 👈 import helper
+import { getImagePath } from "../utils/getImagePath";
+import { useNavigate } from "react-router-dom";
 
 const fleetData = [
   {
@@ -46,6 +47,7 @@ const fleetData = [
 ];
 
 function OurFleet() {
+  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedCar, setSelectedCar] = useState(null);
   const [pickup, setPickup] = useState("");
@@ -90,7 +92,7 @@ function OurFleet() {
           <div className="fleet-card" key={car.id}>
             <img src={getImagePath(car.image)} alt={car.name} /> {/* 👈 fixed */}
             <h3>{car.name}</h3>
-            <p className="price">${car.price} / day</p>
+            <p className="price">₦{car.price * 1000} / day</p>
             <button
               className="book-btn"
               onClick={() => {
@@ -119,7 +121,7 @@ function OurFleet() {
             <p>Transmission: {selectedCar.transmission}</p>
             <p>Fuel: {selectedCar.fuel}</p>
             <p>Seats: {selectedCar.seats}</p>
-            <p className="price">${selectedCar.price} / day</p>
+            <p className="price">₦{(selectedCar.price * 1000).toLocaleString()} / day</p>
 
             <div className="booking-form">
               <label>Pickup Date</label>
@@ -137,10 +139,15 @@ function OurFleet() {
               />
 
               <div className="total">
-                Total: <strong>${total}</strong>
+                Total: <strong>₦{(total * 1000).toLocaleString()}</strong>
               </div>
 
-              <button className="confirm-btn">Confirm Booking</button>
+              <button
+                className="confirm-btn"
+                onClick={() => navigate("/booking", { state: { vehicleId: selectedCar.id, date: pickup } })}
+              >
+                Confirm Booking
+              </button>
             </div>
           </div>
         </div>

@@ -1,26 +1,14 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import api from "../api";
+import React, { createContext, useContext } from "react";
+import { AuthContext } from "./AuthContext";
 
 const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-
-  const fetchUser = async () => {
-    try {
-      const response = await api.get("/api/users/me");
-      setUser(response.data);
-    } catch {
-      setUser(null);
-    }
-  };
-
-  useEffect(() => {
-    fetchUser();
-  }, []);
+  // Reuse AuthContext — no duplicate API calls
+  const auth = useContext(AuthContext);
 
   return (
-    <UserContext.Provider value={{ user, setUser, fetchUser }}>
+    <UserContext.Provider value={auth}>
       {children}
     </UserContext.Provider>
   );

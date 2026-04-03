@@ -1,77 +1,86 @@
 import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 
 export default function LoginForm() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // Show success message if redirected from signup
+  const registered = location.state?.registered;
+
   const submit = async (e) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
-
     try {
-      await login(email, password); // AuthContext handles fetching user and setting state
-      navigate("/dashboard"); // redirect after login
+      const user = await login(email, password);
+      // Redirect based on role
+      const role = user?.role || JSON.parse(localStorage.getItem("user") || "{}")?.role;
+      if (role === "PARTNER") navigate("/partner/dashboard");
+      else if (role === "ADMIN" || role === "SUPERADMIN") navigate("/admin");
+      else navigate("/dashboard");
     } catch (err) {
-      setError(err?.response?.data?.error || err?.message || "Login failed");
+      setError(err?.message || "Login failed");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="max-w-md w-full">
-        {/* Logo/Header */}
+    <div className="min-h-screen bg-neutralLight flex items-center justify-center px-4">
+      <div className="w-full max-w-md">
+
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">Welcome Back</h1>
-          <p className="text-gray-600 mt-2">Sign in to continue to CarHub</p>
+          <h1 className="font-heading text-3xl font-extrabold text-primary">Welcome Back</h1>
+          <p className="font-body text-gray-400 mt-2 text-sm">Sign in to continue to CarHub</p>
         </div>
 
-        {/* Login Form Card */}
-        <div className="bg-white rounded-xl shadow-lg p-8">
-          <h3 className="text-xl font-semibold text-gray-800 mb-6 text-center">
-            Sign In
-          </h3>
+        <div className="bg-white rounded-2xl shadow-xl p-8">
+
+          {registered && (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm font-body mb-6">
+              ✅ Account created! Please sign in.
+            </div>
+          )}
 
           <form onSubmit={submit} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block font-body text-sm font-semibold text-neutralDark mb-1">
                 Email Address
               </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                placeholder="john@example.com"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg font-body focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block font-body text-sm font-semibold text-neutralDark mb-1">
                 Password
               </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                placeholder="••••••••"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg font-body focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
                 required
               />
             </div>
 
             {error && (
-              <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm">
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm font-body">
                 {error}
               </div>
             )}
@@ -79,31 +88,23 @@ export default function LoginForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:bg-blue-400"
+              className="w-full bg-primary hover:bg-blue-900 text-white font-heading font-bold py-3 rounded-xl transition disabled:opacity-50"
             >
               {loading ? "Signing in..." : "Sign In"}
             </button>
           </form>
 
-          <div className="mt-6 text-center text-gray-600">
-            Don't have an account?{" "}
-            <Link
-              to="/signup"
-              className="text-blue-600 font-medium hover:text-blue-700 hover:underline"
-            >
-              Sign up
+          <div className="mt-6 text-center font-body text-sm text-gray-500 space-y-2">
+            <p>
+              Don't have an account?{" "}
+              <Link to="/signup" className="text-primary font-semibold hover:underline">
+                Sign up
+              </Link>
+            </p>
+            <Link to="/" className="block text-gray-400 hover:text-gray-600">
+              ← Back to Home
             </Link>
           </div>
-        </div>
-
-        {/* Back to Home */}
-        <div className="text-center mt-6">
-          <Link
-            to="/"
-            className="text-gray-500 hover:text-gray-700 text-sm"
-          >
-            ← Back to Home
-          </Link>
         </div>
       </div>
     </div>

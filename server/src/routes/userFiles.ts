@@ -18,8 +18,8 @@ router.get("/:id/kyc-file", authenticate, async (req: AuthRequest, res) => {
     const userId = req.params.id;
 
     // Only admin or owner can access
-    const isAdmin = ["ADMIN", "SUPERADMIN"].includes(req.user?.role);
-    const isOwner = req.user?.id === userId;
+    const isAdmin = ["ADMIN", "SUPERADMIN"].includes(req.user!.role);
+    const isOwner = req.user!.id === userId;
 
     if (!isAdmin && !isOwner) {
       return res.status(403).json({ error: "Forbidden" });

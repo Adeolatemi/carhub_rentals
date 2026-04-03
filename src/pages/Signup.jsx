@@ -14,6 +14,7 @@ export default function Signup() {
   });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   function handleChange(e) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -44,7 +45,8 @@ export default function Signup() {
           address: formData.address.trim(),
         }),
       });
-      navigate("/login", { state: { registered: true } });
+      setSuccess(true);
+      setTimeout(() => navigate("/login", { state: { registered: true } }), 2000);
     } catch (err) {
       setError(err.response?.data?.error || "Registration failed. Please try again.");
     } finally {
@@ -175,13 +177,21 @@ export default function Signup() {
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-primary hover:bg-blue-900 text-white font-heading font-bold py-3 rounded-xl transition disabled:opacity-50"
-            >
-              {loading ? "Creating Account..." : isPartner ? "Register as Partner" : "Create Account"}
-            </button>
+            {success ? (
+              <div className="bg-green-50 border border-green-200 rounded-xl p-5 text-center">
+                <div className="text-4xl mb-2">🎉</div>
+                <p className="font-heading font-bold text-green-700 text-lg">Account Created!</p>
+                <p className="font-body text-green-600 text-sm mt-1">Redirecting you to sign in...</p>
+              </div>
+            ) : (
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-primary hover:bg-blue-900 text-white font-heading font-bold py-3 rounded-xl transition disabled:opacity-50"
+              >
+                {loading ? "Creating Account..." : isPartner ? "Register as Partner" : "Create Account"}
+              </button>
+            )}
           </form>
 
           <div className="mt-6 text-center text-sm font-body text-gray-500 space-y-2">

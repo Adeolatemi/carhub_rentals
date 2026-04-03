@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { prisma } from "../prismaClient";
+import { User } from "@prisma/client";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
@@ -8,7 +9,7 @@ if (!JWT_SECRET) {
 }
 
 export interface AuthRequest extends Request {
-  user?: any;
+  user?: User;
 }
 
 export const authenticate = async (req: AuthRequest, res: Response, next: NextFunction) => {

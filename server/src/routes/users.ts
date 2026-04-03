@@ -36,14 +36,13 @@ router.post("/me/kyc", authenticate, async (req: AuthRequest, res: Response) => 
     // Save file
     fs.writeFileSync(filepath, file.buffer);
 
-    // Create KYC history record (disabled until Prisma client updated)
-    // await prisma.kycHistory.create({
-    //   data: {
-    //     userId: req.user.id,
-    //     filename,
-    //     status: "PENDING"
-    //   }
-    // });
+    await prisma.kycHistory.create({
+      data: {
+        userId: req.user.id,
+        filename,
+        status: "PENDING"
+      }
+    });
 
     // Update user kycFile and status
     await prisma.user.update({
@@ -80,8 +79,8 @@ router.get("/me", authenticate, async (req: AuthRequest, res: Response) => {
         name: true,
         role: true,
         isActive: true,
-        // kycStatus: true,
-        // kycFile: true,
+        kycStatus: true,
+        kycFile: true,
       },
     });
 

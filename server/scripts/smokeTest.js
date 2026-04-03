@@ -4,7 +4,7 @@ const fetch = global.fetch || require('node-fetch');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-const API = 'http://localhost:4000';
+const API = 'http://localhost:5000';
 
 async function postJson(pathUrl, body) {
   const res = await fetch(API + pathUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });

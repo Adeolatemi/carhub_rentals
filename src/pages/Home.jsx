@@ -91,12 +91,12 @@ const Home = () => {
       </section>
 
       {/* Fleet */}
-      <section className="py-20 bg-neutralLight">
+      <section className="py-20 bg-neutralLight overflow-hidden">
         <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 text-primary">
           Our Fleet
         </h2>
 
-        <div className="flex gap-6 overflow-x-auto px-6 pb-4 scrollbar-hide">
+        <div className="flex gap-6 overflow-x-auto w-full px-0 pb-4 scrollbar-hide">
           {[
             { id: 1, name: "Toyota Highlander", image: "toyota_highlander.jpg" },
             { id: 2, name: "Toyota Prado", image: "toyota_prado.jpg" },
@@ -105,7 +105,7 @@ const Home = () => {
           ].map((car) => (
             <div
               key={car.id}
-              className="bg-white shadow-lg rounded-xl overflow-hidden hover:scale-105 transition-transform flex-shrink-0 w-72"
+              className="bg-white shadow-lg rounded-xl overflow-hidden hover:scale-105 transition-transform flex-shrink-0 w-[calc(25%-18px)] min-w-[260px]"
             >
               <img
                 src={getImagePath(car.image)}

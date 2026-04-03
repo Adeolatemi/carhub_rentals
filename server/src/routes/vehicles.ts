@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { authenticate, requireRole, AuthRequest } from "../middleware/auth";
 import { prisma } from "../prismaClient";
+import jwt from "jsonwebtoken";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -19,7 +20,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 
-// Create vehicle (partner/admin)
+// Create vehicle
 router.post(
   "/",
   authenticate,
@@ -28,9 +29,12 @@ router.post(
   async (req: AuthRequest, res) => {
     try {
       const { title, description, dailyRate, category } = req.body;
-      if (!title || !dailyRate) return res.status(400).json({ error: "Title and daily rate are required" });
+      if (!title || !dailyRate)
+        return res.status(400).json({ error: "Title and daily rate are required" });
 
-      // Find or create category
+      if (isNaN(Number(dailyRate)) || Number(dailyRate) <= 0)
+        return res.status(400).json({ error: "Daily rate must be a positive number" });
+
       let categoryId: string | undefined;
       if (category) {
         const cat = await prisma.vehicleCategory.upsert({
@@ -45,8 +49,8 @@ router.post(
 
       const vehicle = await prisma.vehicle.create({
         data: {
-          title,
-          description: description || null,
+          title: title.trim(),
+          description: description?.trim() || null,
           dailyRate: Number(dailyRate),
           categoryId: categoryId || null,
           ownerId: req.user!.id,
@@ -63,20 +67,27 @@ router.post(
   }
 );
 
-// List vehicles
+// List vehicles — public, but ?my=true requires auth
 router.get("/", async (req: AuthRequest, res) => {
   try {
     const { q, available, my } = req.query as any;
     const where: any = {};
 
-    // Partner sees only their own vehicles when ?my=true
-    if (my === "true" && req.headers.authorization) {
-      try {
-        const jwt = require("jsonwebtoken");
-        const token = req.headers.authorization.split(" ")[1];
-        const payload: any = jwt.verify(token, process.env.JWT_SECRET!);
-        where.ownerId = payload.id;
-      } catch { }
+    if (my === "true") {
+      // Require auth for own vehicles
+      let token: string | undefined;
+      const auth = req.headers.authorization;
+      if (auth) {
+        const parts = auth.split(" ");
+        if (parts.length === 2 && parts[0] === "Bearer") token = parts[1];
+      }
+      if (!token && req.cookies?.token) token = req.cookies.token;
+      if (!token) return res.status(401).json({ error: "Authentication required" });
+      const payload: any = jwt.verify(token, process.env.JWT_SECRET!);
+      const user = await prisma.user.findUnique({ where: { id: payload.id } });
+      if (!user || !user.isActive) return res.status(401).json({ error: "Invalid token or user inactive" });
+      req.user = user;
+      where.ownerId = req.user.id;
     }
 
     if (q) where.OR = [
@@ -104,7 +115,7 @@ router.get("/:id", async (req, res) => {
       where: { id: req.params.id },
       include: { category: true },
     });
-    if (!v) return res.status(404).json({ error: "Not found" });
+    if (!v) return res.status(404).json({ error: "Vehicle not found" });
     res.json(v);
   } catch (err) {
     console.error(err);
@@ -112,7 +123,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// Delist vehicle
+// Toggle availability (delist/relist)
 router.patch(
   "/:id/delist",
   authenticate,
@@ -120,10 +131,12 @@ router.patch(
   async (req: AuthRequest, res) => {
     try {
       const vehicle = await prisma.vehicle.findUnique({ where: { id: req.params.id } });
-      if (!vehicle) return res.status(404).json({ error: "Not found" });
+      if (!vehicle) return res.status(404).json({ error: "Vehicle not found" });
+
       if (vehicle.ownerId !== req.user!.id && !["SUPERADMIN", "ADMIN"].includes(req.user!.role)) {
-        return res.status(403).json({ error: "Forbidden" });
+        return res.status(403).json({ error: "Forbidden — not your vehicle" });
       }
+
       const updated = await prisma.vehicle.update({
         where: { id: req.params.id },
         data: { available: !vehicle.available },

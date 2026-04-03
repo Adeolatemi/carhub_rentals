@@ -16,7 +16,7 @@ import VehicleDetail from "./pages/VehicleDetail";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import PartnerLayout from "./layouts/PartnerLayout";
-import PartnerDashboard from "./pages/PartnerDashboard";
+import PartnerDashboard from "./modules/partner/PartnerDashboard";
 import PartnerVehicles from "./modules/partner/PartnerVehicles";
 import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./ProtectedRoute";
@@ -68,13 +68,13 @@ function AppContent() {
 export default function App() {
   return (
     <ThemeProvider>
-      <UserProvider>
-        <AuthProvider>
+      <AuthProvider>
+        <UserProvider>
           <Router>
             <AppContent />
           </Router>
-        </AuthProvider>
-      </UserProvider>
+        </UserProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

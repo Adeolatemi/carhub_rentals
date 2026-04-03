@@ -18,12 +18,17 @@ dotenv.config();
 const app = express();
 
 // Middleware
-app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
+app.use(cors({ 
+  origin: process.env.FRONTEND_URL?.split(',') || ['http://localhost:5173', 'http://localhost:5174', 'https://adeolatemi.github.io/carhub_rentals'], 
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
 app.use(express.json());
 app.use(cookieParser());
 
 // Parse multipart/form-data for file uploads
-app.use(multer().any());
+// app.use(multer().any()); // Disabled for Vercel serverless
 
 // Routes
 app.use("/health", healthRouter);
@@ -34,7 +39,7 @@ app.use("/subscriptions", subscriptionsRouter);
 app.use("/orders", ordersRouter);
 app.use("/users", usersRouter);
 
-app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+// app.use("/uploads", express.static(path.join(process.cwd(), "uploads"))); // No persistent storage in serverless
 
 // Root endpoint
 app.get("/", (_req, res) => res.json({ ok: true, service: "carhub-server" }));

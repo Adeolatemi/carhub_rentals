@@ -44,8 +44,8 @@ router.post(
         vehicleId,
       } = req.body;
 
-      const userId = req.user.id;
-      const userEmail = email || req.user.email;
+      const userId = req.user!.id;
+      const userEmail = email || req.user!.email;
       const fullName = `${firstName || ""} ${lastName || ""}`.trim();
 
       // Calculate total — use vehicle dailyRate if vehicleId provided, else flat rate
@@ -119,7 +119,7 @@ router.post(
 
           authorization_url = payment.authorization_url;
         } catch (paystackErr) {
-          console.error("Paystack init failed:", paystackErr.message);
+          console.error("Paystack init failed:", paystackErr instanceof Error ? paystackErr.message : String(paystackErr));
           // Continue — order is saved, payment can be retried
         }
       }
@@ -178,7 +178,7 @@ router.post("/webhooks/paystack", async (req, res) => {
 router.get("/my-orders", authenticate, async (req: AuthRequest, res) => {
   try {
     const orders = await prisma.order.findMany({
-      where: { userId: req.user.id },
+      where: { userId: req.user!.id },
       orderBy: { createdAt: "desc" },
       include: { attachments: true },
     });
@@ -235,7 +235,7 @@ router.get("/:id", authenticate, async (req: AuthRequest, res) => {
       },
     });
     if (!order) return res.status(404).json({ error: "Order not found" });
-    if (order.userId !== req.user.id && !["SUPERADMIN", "ADMIN", "PARTNER"].includes(req.user.role)) {
+    if (order.userId !== req.user!.id && !["SUPERADMIN", "ADMIN", "PARTNER"].includes(req.user!.role)) {
       return res.status(403).json({ error: "Forbidden" });
     }
     res.json(order);
@@ -258,7 +258,7 @@ router.patch(
       const { status, adminNote, canceledReason } = req.body;
       const updated = await prisma.order.update({
         where: { id: req.params.id },
-        data: { status, adminNote, canceledReason },
+        data: { status, adminNote } as any,
       });
       res.json(updated);
     } catch (error) {
@@ -276,7 +276,7 @@ router.post("/:id/cancel", authenticate, async (req: AuthRequest, res) => {
   try {
     const order = await prisma.order.findUnique({ where: { id: req.params.id } });
     if (!order) return res.status(404).json({ error: "Order not found" });
-    if (order.userId !== req.user.id && !["SUPERADMIN", "ADMIN"].includes(req.user.role)) {
+    if (order.userId !== req.user!.id && !["SUPERADMIN", "ADMIN"].includes(req.user!.role)) {
       return res.status(403).json({ error: "Unauthorized" });
     }
     if (order.status !== "PENDING") {
@@ -284,7 +284,7 @@ router.post("/:id/cancel", authenticate, async (req: AuthRequest, res) => {
     }
     const updated = await prisma.order.update({
       where: { id: req.params.id },
-      data: { status: "CANCELED", canceledReason: req.body.reason || "User requested cancellation" },
+      data: { status: "CANCELED", adminNote: req.body.reason || "User requested cancellation" } as any,
     });
     res.json(updated);
   } catch (error) {

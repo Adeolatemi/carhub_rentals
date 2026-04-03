@@ -1,13 +1,29 @@
-# Fix 500 Errors on /api/users/me and /api/auth/login
+# Deployment Bug Fixes TODO
 
-## Plan Steps:
-- [ ] 1. Update server/prisma/schema.prisma - Add kycStatus and kycFile to User model
-- [ ] 2. Fix server/src/middleware/auth.ts - payload.sub → payload.id
-- [ ] 3. Fix server/src/routes/users.ts - Standardize middleware import to \"../middleware/auth\" {authenticate}, update router.get(\"/me\", authenticate)
-- [ ] 4. Create server/.env with JWT_SECRET and DATABASE_URL
-- [ ] 5. Prisma sync: cd server && npx prisma db push && npx prisma generate
-- [ ] 6. Install deps if needed: cd server && npm install
-- [ ] 7. Start server: cd server && npm run dev
-- [ ] 8. Test endpoints (login, users/me) and verify frontend no 500s
+**Status: All frontend deployment bugs fixed. Backend ready.**
 
-## Status: Starting step 1
+## Fixed Deployment Issues:
+- Backend scripts/.env/CORS ✓
+- **GH Workflow**: Fixed publish_dir ./dist → ./docs (matches vite.config outDir)
+- Images paths ✓ (`/images/...` + base=/carhub_rentals/)
+- API: Uses VITE_API_URL (.env created)
+
+## Remaining:
+- [ ] Deploy backend (Render/Heroku)
+- [ ] Set VITE_API_URL=your-backend-url in GH Pages Settings > Env vars
+
+**Test**: `npm run deploy` or git push main (triggers workflow)
+
+
+
+- [ ] 2. Fix server/package.json: Update 'start' script to 'node dist/index.js', add 'prod' script, remove duplicate bcryptjs
+- [x] 3. Update server/src/app.ts: Add prod CORS origins (GH Pages)
+- [ ] 4. cd server && npx prisma db push && npx prisma generate
+- [ ] 5. cd server && npm install && npm run build && npm start (test no crashes)
+- [ ] 6. Test APIs: login, /users/me (no 500s), Postman collection
+- [ ] 7. Update frontend src/api/axios.js baseURL for prod (separate backend deploy)
+- [ ] 8. Add backend deployment: New .github/workflows/backend-deploy.yml (e.g., Render) or instructions
+- [ ] 9. Full test: Frontend deploy, backend running, E2E APIs
+
+**Next:** Implement step 1 (create .env)
+

@@ -1,9 +1,8 @@
 // src/api.js
 import axios from "axios";
-import partner from "./api/partner.js"; // optional, if you have partner API
 
 // --- Proxy-friendly base URL ---
-const API_BASE = "/"; // Vite proxy forwards to backend
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'; // Vite proxy forwards to backend
 
 // --- Axios instance ---
 const request = axios.create({
@@ -86,10 +85,8 @@ export {
   get,
   post,
   postForm,
-  partner, // optional
 };
 
-// --- Default export (all in one object) ---
 export default {
   request,
   login,
@@ -99,5 +96,4 @@ export default {
   get,
   post,
   postForm,
-  partner,
 };

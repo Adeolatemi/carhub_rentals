@@ -1,97 +1,40 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { request } from "../api";
+import api from "../api/index.js";
 
 export default function VehicleDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-
   const [vehicle, setVehicle] = useState(null);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
   const [msg, setMsg] = useState("");
 
   useEffect(() => {
-    loadVehicle();
+    api.get(`/vehicles/${id}`)
+      .then((r) => setVehicle(r.data))
+      .catch(() => setMsg("Failed to load vehicle"));
   }, [id]);
 
-  async function loadVehicle() {
-    try {
-      const data = await request(`/vehicles/${id}`);
-      setVehicle(data);
-    } catch (err) {
-      console.error(err);
-    }
-  }
-
-  async function rent(e) {
-    e.preventDefault();
-
-    try {
-      const days =
-        (new Date(endDate) - new Date(startDate)) / (24 * 3600 * 1000) || 1;
-
-      const total = (vehicle?.dailyRate || 0) * days;
-
-      const payload = {
-        vehicleId: id,
-        startDate,
-        endDate,
-        totalAmount: total,
-      };
-
-      const order = await request(`/orders/request`, {
-        method: "POST",
-        body: JSON.stringify(payload),
-      });
-
-      const checkout = await request(`/orders/checkout/${order.id}`, {
-        method: "POST",
-      });
-
-      window.location.href = checkout.payment.paymentUrl;
-    } catch (err) {
-      setMsg(err.error || "Failed to create order");
-    }
-  }
-
-  if (!vehicle) {
-    return <div style={{ padding: 20 }}>Loading...</div>;
-  }
+  if (!vehicle) return (
+    <div className="min-h-screen flex items-center justify-center font-body text-gray-400">
+      {msg || "Loading..."}
+    </div>
+  );
 
   return (
-    <div style={{ padding: 20 }}>
-      <h3>{vehicle.title}</h3>
-      <p>{vehicle.description}</p>
-      <p>Daily: ₦{vehicle.dailyRate}</p>
-
-      <button onClick={() => navigate(`/booking/${vehicle.id}`)}>
+    <div className="max-w-2xl mx-auto px-6 py-12">
+      {vehicle.imageUrl && (
+        <img src={vehicle.imageUrl} alt={vehicle.title} className="w-full h-64 object-cover rounded-2xl mb-6" />
+      )}
+      <h1 className="font-heading text-3xl font-extrabold text-primary mb-2">{vehicle.title}</h1>
+      {vehicle.description && <p className="font-body text-gray-500 mb-4">{vehicle.description}</p>}
+      <p className="font-body text-xl font-bold text-accent mb-8">₦{Number(vehicle.dailyRate).toLocaleString()}/day</p>
+      <button
+        onClick={() => navigate("/booking", { state: { vehicleId: vehicle.id } })}
+        className="bg-primary text-white font-heading font-bold px-8 py-3 rounded-xl hover:bg-blue-900 transition"
+      >
         Book Now
       </button>
-
-      <form onSubmit={rent}>
-        <div>
-          <label>Start</label>
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-          />
-        </div>
-
-        <div>
-          <label>End</label>
-          <input
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-          />
-        </div>
-
-        <button type="submit">Rent</button>
-      </form>
-
-      {msg && <p>{msg}</p>}
+      {msg && <p className="text-red-500 font-body text-sm mt-4">{msg}</p>}
     </div>
   );
 }
