@@ -13,7 +13,7 @@ export default defineConfig({
   base: process.env.NODE_ENV === 'production' ? '/carhub_rentals/' : '/',
 
   build: {
-    outDir: 'docs',
+    outDir: 'dist',
     rollupOptions: {
       output: {
         entryFileNames: 'assets/[name].[hash].js',
