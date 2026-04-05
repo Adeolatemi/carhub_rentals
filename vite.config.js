@@ -10,7 +10,7 @@ export default defineConfig({
     port: 5173,
   },
   
-  base: process.env.NODE_ENV === 'production' ? '/carhub_rentals/' : '/',
+  base: '/',
 
   build: {
     outDir: 'dist',
