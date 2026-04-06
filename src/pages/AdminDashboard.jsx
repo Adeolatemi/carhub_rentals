@@ -6,13 +6,13 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     // Fetch quick bookings
-    fetch("http://localhost:5000/api/bookings")
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/bookings`)
       .then((res) => res.json())
       .then((data) => setBookings(data))
       .catch((err) => console.error("Error fetching bookings:", err));
 
     // Fetch full orders
-    fetch("http://localhost:5000/api/orders")
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/orders`)
       .then((res) => res.json())
       .then((data) => setOrders(data))
       .catch((err) => console.error("Error fetching orders:", err));

@@ -12,7 +12,7 @@ async function submit(e) {
     const fd = new FormData();
     fd.append("document", file);
     const token = localStorage.getItem("token");
-    const baseUrl = import.meta.env.VITE_API_BASE || "/api"; // Use proxy /api -> server
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
     try {
       const res = await fetch(baseUrl + "/users/me/kyc", { 
         method: "POST", 
