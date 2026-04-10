@@ -3,23 +3,39 @@ import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
-// Create axios instance
 const api = axios.create({
   baseURL: API_URL,
-  withCredentials: true, 
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   }
 });
 
-// Attach token to every request (single interceptor, not duplicated)
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+// ✅ Request interceptor to add token to every request
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Response interceptor for debugging
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token expired or invalid
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
   }
-  return config;
-});
+);
 
 // Auth endpoints
 export const auth = {
@@ -40,5 +56,4 @@ export const subscriptions = {
   subscribe: (plan) => api.post("/subscriptions/subscribe", { plan }),
 };
 
-// Export default axios instance if you need raw access
 export default api;
