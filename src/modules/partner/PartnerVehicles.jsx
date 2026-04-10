@@ -65,7 +65,9 @@ export default function PartnerVehicles() {
     try {
       await api.patch(`/vehicles/${v.id}/delist`);
       fetchVehicles();
-    } catch { }
+    } catch (err) {
+      console.error("Failed to toggle availability:", err);
+    }
   };
 
   return (

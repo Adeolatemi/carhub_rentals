@@ -1,8 +1,14 @@
 import React from "react";
+import SEO from "../components/SEO";
 
 export default function About() {
   return (
     <div className="min-h-screen bg-gray-50 py-16 px-6">
+      <SEO
+        title="About Us — CarHub Car Rental Lagos"
+        description="Learn about CarHub Rentals — Lagos's most trusted car hire service. Our mission, how it works, safety standards, and fleet partner programme."
+        path="/about"
+      />
       <div className="max-w-6xl mx-auto">
         
         {/* Hero Section */}

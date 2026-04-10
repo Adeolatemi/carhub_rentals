@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "./OurFleet.css";
 import { getImagePath } from "../utils/getImagePath";
 import { useNavigate } from "react-router-dom";
+import SEO from "../components/SEO";
 
 const fleetData = [
   {
@@ -71,6 +72,11 @@ function OurFleet() {
 
   return (
     <div className="fleet-container">
+      <SEO
+        title="Our Fleet — SUV, Luxury & Saloon Cars for Hire | CarHub Lagos"
+        description="Browse CarHub's fleet of vehicles available for hire in Lagos. Lexus RX 350, Toyota Alphard, Toyota Prado, Honda Civic and more. Book online today."
+        path="/fleet"
+      />
       <h1 className="fleet-title">Our Fleet</h1>
 
       {/* Filters */}

@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import api from "../api/index.js";
 import countryCodes from "../data/countryCodes.js";
+import SEO from "../components/SEO";
 
 const timeOptions = Array.from({ length: 24 }, (_, h) =>
   ["00", "30"].map((m) => {
@@ -60,7 +61,7 @@ export default function Booking() {
   useEffect(() => {
     if (location.state) {
       const nameParts = (location.state.name || "").split(" ");
-      setFormData((prev) => ({
+      setFormData((prev) => ({ // eslint-disable-line react-hooks/set-state-in-effect
         ...prev,
         firstName: nameParts[0] || "",
         lastName: nameParts.slice(1).join(" ") || "",
@@ -145,6 +146,11 @@ export default function Booking() {
 
   return (
     <section className="bg-neutralLight min-h-screen py-12 px-4">
+      <SEO
+        title="Book a Car â€” Car Rental Lagos | CarHub"
+        description="Book a car online with CarHub Lagos. Choose your pickup location, date, time, car type and driver preference. Fast, easy, secure booking."
+        path="/booking"
+      />
       <div className="bg-white shadow-xl rounded-2xl p-8 max-w-4xl mx-auto">
         <h2 className="font-heading text-3xl font-extrabold mb-2 text-center text-primary">
           Book Your Ride
@@ -155,12 +161,12 @@ export default function Booking() {
 
         {errors.submit && (
           <p className="text-red-600 font-body text-center mb-4 p-4 bg-red-50 rounded">
-            ❌ {errors.submit}
+            âŒ {errors.submit}
           </p>
         )}
         {submitted && !errors.submit && (
           <p className="text-green-600 font-body text-center mb-4 p-4 bg-green-50 rounded">
-            ✅ Redirecting to payment...
+            âœ… Redirecting to payment...
           </p>
         )}
 
@@ -349,12 +355,12 @@ export default function Booking() {
                 <img src={idPreview} alt="ID preview" className="h-28 object-contain rounded-lg pointer-events-none" />
               ) : idFile ? (
                 <div className="flex flex-col items-center gap-1 pointer-events-none">
-                  <span className="text-3xl">📄</span>
+                  <span className="text-3xl">ðŸ“„</span>
                   <span className="text-sm font-body text-gray-600">{idFile.name}</span>
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-1 text-gray-400 pointer-events-none">
-                  <span className="text-3xl">📁</span>
+                  <span className="text-3xl">ðŸ“</span>
                   <span className="text-sm font-body">Click to upload (JPG, PNG, PDF)</span>
                   <span className="text-xs font-body">Max 5MB</span>
                 </div>
@@ -367,7 +373,7 @@ export default function Booking() {
                 onClick={() => { setIdFile(null); setIdPreview(null); fileInputRef.current.value = ""; }}
                 className="mt-2 text-xs text-red-500 hover:underline font-body"
               >
-                ✕ Remove file
+                âœ• Remove file
               </button>
             )}
             {errors.idFile && <p className="text-red-500 text-xs mt-1">{errors.idFile}</p>}

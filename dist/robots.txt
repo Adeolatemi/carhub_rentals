@@ -1,3 +1,13 @@
 User-agent: *
 Allow: /
-Sitemap: https://carhub.ng/sitemap.xml
+Allow: /assets/
+Allow: /*.js$
+Allow: /*.css$
+Allow: /images/
+
+Disallow: /dashboard
+Disallow: /partner
+Disallow: /admin
+Disallow: /booking/confirm
+
+Sitemap: https://carhub-rentals.vercel.app/sitemap.xml

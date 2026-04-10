@@ -1,3 +1,13 @@
 User-agent: *
 Allow: /
-Sitemap: https://carhub.ng/sitemap.xml
+Allow: /assets/
+Allow: /*.js$
+Allow: /*.css$
+Allow: /images/
+
+Disallow: /carhub_rentals/dashboard
+Disallow: /carhub_rentals/partner
+Disallow: /carhub_rentals/admin
+Disallow: /carhub_rentals/booking/confirm
+
+Sitemap: https://adeolatemi.github.io/carhub_rentals/sitemap.xml

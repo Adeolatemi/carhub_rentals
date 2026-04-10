@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import SEO from "../components/SEO";
 
 // FAQ data
 const faqSections = [
@@ -60,6 +61,11 @@ export default function Faqs() {
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-slate-900 text-gray-900 dark:text-gray-100 flex justify-center px-4 py-12">
+      <SEO
+        title="FAQs — Car Rental Questions Answered | CarHub Lagos"
+        description="Frequently asked questions about CarHub car rental in Lagos. Booking, pricing, payment, safety, airport transfers, wedding cars and more."
+        path="/faqs"
+      />
       <div className="max-w-4xl w-full space-y-12">
 
         {/* Header Section

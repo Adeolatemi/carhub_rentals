@@ -29,7 +29,8 @@ export default function PartnerDashboard() {
     { label: "Total Vehicles", value: vehicles.length, icon: "🚗", color: "bg-blue-50 text-primary" },
     { label: "Available",      value: available,        icon: "✅", color: "bg-green-50 text-green-700" },
     { label: "Booked",         value: booked,           icon: "📅", color: "bg-yellow-50 text-yellow-700" },
-    { label: "Total Bookings", value: orders.length,    icon: "📋", color: "bg-purple-50 text-purple-700" },
+    { label: "Pending Orders", value: pending,          icon: "⏳", color: "bg-orange-50 text-orange-700" },
+    { label: "Confirmed Orders", value: confirmed,      icon: "✔️", color: "bg-green-50 text-green-700" },
   ];
 
   if (loading) return <div className="font-body text-gray-400 py-12 text-center">Loading...</div>;

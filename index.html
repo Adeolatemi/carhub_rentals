@@ -2,28 +2,80 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
-    <title>CarHub | Car Rental Nigeria | Fleet Management for Car Owners</title>
-    <meta name="description" content="CarHub - Premier car rental service in Nigeria. Rent luxury vehicles, or become a partner - list your fleet, subscribe and earn with our platform. Best rates, easy booking." />
-    <meta name="keywords" content="car rental Nigeria, vehicle rental, car hire, fleet management, partner fleet, luxury car rental, car subscription Nigeria, rent a car Lagos Abuja" />
-    <meta name="author" content="CarHub" />
+    <!-- Primary SEO — injected at build time by vite-plugin-html -->
+    <title><%= title %></title>
+    <meta name="description" content="<%= description %>" />
+    <meta name="keywords" content="<%= keywords %>" />
+    <meta name="author" content="CarHub Rentals" />
     <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#1E3A8A" />
+
+    <link rel="canonical" href="<%= siteUrl %>/" />
+
     <!-- Open Graph -->
-    <meta property="og:title" content="CarHub | Car Rental & Fleet Partnership Nigeria" />
-    <meta property="og:description" content="Rent cars or list your fleet for rental. Partner program with subscription for car owners." />
-    <meta property="og:image" content="/images/carhub_logo.png" />
-    <meta property="og:url" content="https://carhub.ng" />
     <meta property="og:type" content="website" />
-    <!-- Twitter -->
+    <meta property="og:site_name" content="CarHub Rentals" />
+    <meta property="og:title" content="<%= title %>" />
+    <meta property="og:description" content="<%= description %>" />
+    <meta property="og:image" content="<%= ogImage %>" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:url" content="<%= siteUrl %>/" />
+    <meta property="og:locale" content="en_NG" />
+
+    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="CarHub Car Rental Nigeria" />
-    <meta name="twitter:description" content="Rent or list cars with CarHub - fleet management made easy." />
-    <meta name="twitter:image" content="/images/carhub_logo.png" />
+    <meta name="twitter:title" content="<%= title %>" />
+    <meta name="twitter:description" content="<%= description %>" />
+    <meta name="twitter:image" content="<%= ogImage %>" />
+
     <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="32x32" href="/images/carhub_logo.png" />
-    <link rel="canonical" href="https://carhub.ng" />
+    <link rel="apple-touch-icon" href="/images/carhub_logo.png" />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Poppins:wght@300;400;500;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet" />
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      "name": "CarHub Rentals",
+      "description": "<%= description %>",
+      "url": "<%= siteUrl %>/",
+      "logo": "<%= ogImage %>",
+      "image": "<%= ogImage %>",
+      "telephone": "+2347031685999",
+      "email": "carhub@gmail.com",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Lagos",
+        "addressCountry": "NG"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": "6.5244",
+        "longitude": "3.3792"
+      },
+      "openingHours": "Mo-Su 00:00-23:59",
+      "priceRange": "₦₦",
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "Car Rental Services",
+        "itemListElement": [
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Airport Transfer Lagos" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Wedding Car Hire Lagos" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Corporate Car Rental Lagos" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "SUV Rental Lagos" } }
+        ]
+      }
+    }
+    </script>
   </head>
 
   <body>

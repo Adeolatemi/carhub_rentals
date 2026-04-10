@@ -1,8 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
 import api from "../api";
 
-const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
-
 export const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
@@ -11,26 +9,8 @@ export function AuthProvider({ children }) {
 
   const fetchUser = async () => {
     try {
-      const token = localStorage.getItem("token");
-      if (!token) { 
-        setUser(null); 
-        setLoading(false);
-        return; 
-      }
-      const response = await fetch(API_URL + "/auth/me", {
-        headers: {
-          Authorization: `Bearer ${token}`
-        },
-        credentials: 'include'
-      });
-      if (!response.ok) {
-        localStorage.removeItem("token");
-        setUser(null);
-        setLoading(false);
-        return;
-      }
-      const data = await response.json();
-      setUser(data.user);
+      const response = await api.get("/auth/me");
+      setUser(response.data.user);
       setLoading(false);
     } catch {
       localStorage.removeItem("token");
@@ -40,24 +20,12 @@ export function AuthProvider({ children }) {
   };
 
   const login = async (email, password) => {
-    const response = await fetch(API_URL + "/auth/login", {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password }),
-      credentials: 'include'
-    });
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'Login failed' }));
-      throw new Error(error.error || 'Login failed');
-    }
-    const data = await response.json();
-    if (data.token) localStorage.setItem("token", data.token);
-    if (data.user) {
-      localStorage.setItem("user", JSON.stringify(data.user));
-      setUser(data.user);
-      return data.user;
+    const response = await api.post("/auth/login", { email, password });
+    if (response.data.token) localStorage.setItem("token", response.data.token);
+    if (response.data.user) {
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+      setUser(response.data.user);
+      return response.data.user;
     } else {
       throw new Error('Login failed');
     }
