@@ -12,18 +12,19 @@ const api = axios.create({
   }
 });
 
-// Attach token if present
+// Attach token to every request (single interceptor, not duplicated)
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
   return config;
 });
 
 // Auth endpoints
 export const auth = {
-  login: (data) => api.post("/auth/login", data),
   register: (data) => api.post("/auth/register", data),
+  login: (data) => api.post("/auth/login", data),
   me: () => api.get("/auth/me"),
 };
 
