@@ -1,38 +1,49 @@
 // src/api/index.js
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+// ✅ Make sure this is the correct URL
+const API_URL = 'https://server-icy-grass-4740.fly.dev';
 
+console.log("🔧 API initialized with URL:", API_URL);
+
+// Create axios instance
 const api = axios.create({
   baseURL: API_URL,
   withCredentials: true,
+  timeout: 30000, // 30 second timeout
   headers: {
     "Content-Type": "application/json",
+    "Accept": "application/json",
   }
 });
 
-// ✅ Request interceptor to add token to every request
+// Request interceptor - add token to every request
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
+    console.log("📤 Request interceptor - URL:", config.url);
+    console.log("📤 Request interceptor - Token exists:", !!token);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log("📤 Added Authorization header");
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    console.error("📤 Request interceptor error:", error);
+    return Promise.reject(error);
+  }
 );
 
-// Response interceptor for debugging
+// Response interceptor - handle responses properly
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log("📥 Response interceptor - Status:", response.status);
+    console.log("📥 Response interceptor - Data:", response.data);
+    return response;
+  },
   (error) => {
-    if (error.response?.status === 401) {
-      // Token expired or invalid
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      window.location.href = "/login";
-    }
+    console.error("📥 Response interceptor error:", error.response?.status, error.response?.data);
     return Promise.reject(error);
   }
 );
