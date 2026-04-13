@@ -302,10 +302,44 @@ export default function Booking() {
       
     </section>
   );
-  if (response.ok && data.ok) {
-  // Set a flag to indicate booking was just completed
-  localStorage.setItem("just_booked", "true");
-    console.log("Booking successful, redirecting to dashboard...");
-  window.location.href = "/dashboard";
+//   if (response.ok && data.ok) {
+  
+//   localStorage.setItem("just_booked", "true");
+//     console.log("Booking successful");
+//   window.location.href = "https://carhub-rentals.vercel.app/dashboard?test=1";
+// }
+// if (response.ok && data.ok) {
+//   console.log("Booking successful");
+//   localStorage.setItem("just_booked", "true");
+//   setTimeout(() => {
+//     window.location.href = "/dashboard";
+//   }, 500);
+// }
+// if (response.ok && data.ok) {
+//   console.log("Booking successful");
+//   // Force a complete page reload to a simple HTML page
+//   window.location.href = "https://carhub-rentals.vercel.app/dashboard?booked=true&t=" + Date.now();
+// }
+// if (response.ok && data.ok) {
+//   console.log("Booking successful, setting flag");
+//   sessionStorage.setItem("just_booked", "true");
+//   sessionStorage.setItem("booking_complete", Date.now().toString());
+//   window.location.href = "/dashboard";
+// }
+if (response.ok && data.ok) {
+  console.log("✅ BOOKING SUCCESSFUL");
+  
+  // Show success message
+  setBookingMessage({ 
+    type: "success", 
+    text: "✅ Booking created successfully! Redirecting to dashboard..." 
+  });
+  
+  // Force redirect after 1 second
+  setTimeout(() => {
+    console.log("🔄 REDIRECTING TO DASHBOARD NOW");
+    window.location.href = "/dashboard?success=true";
+  }, 1000);
 }
 }
+
