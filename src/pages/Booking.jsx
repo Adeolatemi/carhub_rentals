@@ -327,19 +327,9 @@ export default function Booking() {
 //   window.location.href = "/dashboard";
 // }
 if (response.ok && data.ok) {
-  console.log("✅ BOOKING SUCCESSFUL");
-  
-  // Show success message
-  setBookingMessage({ 
-    type: "success", 
-    text: "✅ Booking created successfully! Redirecting to dashboard..." 
-  });
-  
-  // Force redirect after 1 second
-  setTimeout(() => {
-    console.log("🔄 REDIRECTING TO DASHBOARD NOW");
-    window.location.href = "/dashboard?success=true";
-  }, 1000);
+  console.log("✅ BOOKING SUCCESSFUL - REDIRECTING NOW");
+  window.location.href = "/dashboard?success=true";
 }
 }
+
 
