@@ -1,6 +1,6 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "./contexts/AuthContext";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { UserProvider } from "./contexts/UserContext";
 import Header from "./components/Header";
@@ -20,12 +20,31 @@ import PartnerDashboard from "./modules/partner/PartnerDashboard";
 import PartnerVehicles from "./modules/partner/PartnerVehicles";
 import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./ProtectedRoute";
-import { useAuth } from "./contexts/AuthContext";
 
+// ✅ FIXED PrivateRoute with proper loading handling
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
-  if (loading) return null;
-  return user ? children : <Navigate to="/login" />;
+  
+  // Show loading indicator while checking authentication
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-gray-500">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Redirect to login if not authenticated
+  if (!user) {
+    console.log("PrivateRoute: No user found, redirecting to login");
+    return <Navigate to="/login" replace />;
+  }
+  
+  console.log("PrivateRoute: User authenticated, showing dashboard");
+  return children;
 }
 
 function AppContent() {
@@ -49,10 +68,20 @@ function AppContent() {
           <Route path="/signup" element={<Signup />} />
 
           {/* Protected routes */}
-          <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-          
-          {/* Partner routes - PARTNER role only */}
-          <Route path="/partner" element={<ProtectedRoute roles={["PARTNER"]}><PartnerLayout /></ProtectedRoute>}>
+          <Route 
+  path="/dashboard" 
+  element={
+    <ProtectedRoute>
+      <Dashboard />
+    </ProtectedRoute>
+  } 
+/>
+   {/* Partner routes - PARTNER role only */}
+          <Route path="/partner" element={
+            <ProtectedRoute roles={["PARTNER"]}>
+              <PartnerLayout />
+            </ProtectedRoute>
+          }>
             <Route index element={<PartnerDashboard />} />
             <Route path="dashboard" element={<PartnerDashboard />} />
             <Route path="vehicles" element={<PartnerVehicles />} />
@@ -79,4 +108,3 @@ export default function App() {
     </ThemeProvider>
   );
 }
-
