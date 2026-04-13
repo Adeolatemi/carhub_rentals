@@ -1,10 +1,12 @@
 import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
+import { authenticate, AuthRequest } from "../middleware/auth";
 
 const router = Router();
 const prisma = new PrismaClient();
 
-router.post("/", async (req, res) => {
+// POST /booking - Create a new booking (with authentication)
+router.post("/", authenticate, async (req: AuthRequest, res) => {
   try {
     const {
       fullName,
@@ -14,42 +16,39 @@ router.post("/", async (req, res) => {
       dropoffLocation,
       startDate,
       endDate,
-      vehicleId,     // optional
-      userId,        // optional (if logged in later)
+      vehicleId,
     } = req.body;
 
-    // Basic validation (keep it simple for now)
+    const userId = req.user?.id;
+
+    // Basic validation
     if (!fullName || !phone || !pickupLocation || !dropoffLocation || !startDate || !endDate) {
-      return res.status(400).json({ message: "Missing required fields" });
+      return res.status(400).json({ error: "Missing required fields", ok: false });
     }
 
-    // Optional: compute amount (simple example)
-    const totalAmount = 25000; // replace with real pricing logic later
+    // Calculate total amount
+    const totalAmount = 25000;
 
     const booking = await prisma.carBooking.create({
       data: {
         fullName,
         phone,
         email,
-
         pickupLocation,
         dropoffLocation,
-
         startDate: new Date(startDate),
         endDate: new Date(endDate),
-
         totalAmount,
-
-        // relations (optional)
-        ...(userId && { userId }),
+        userId,
         ...(vehicleId && { vehicleId }),
       },
     });
 
-    return res.status(201).json(booking);
+    // Return the same format as orders endpoint for consistency
+    return res.status(201).json({ ok: true, order: booking });
   } catch (error) {
     console.error("BOOKING ERROR:", error);
-    return res.status(500).json({ message: "Booking failed" });
+    return res.status(500).json({ error: "Booking failed", ok: false });
   }
 });
 

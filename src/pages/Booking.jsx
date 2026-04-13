@@ -47,7 +47,6 @@ export default function Booking() {
         vehicleId: location.state.vehicleId || "",
       });
     } else if (user) {
-      // Pre-fill with user data if available
       setFormData(prev => ({
         ...prev,
         fullName: user.name || "",
@@ -71,7 +70,6 @@ export default function Booking() {
     if (!formData.startDate) errors.startDate = "Start date is required";
     if (!formData.endDate) errors.endDate = "End date is required";
     
-    // Validate date range
     if (formData.startDate && formData.endDate && new Date(formData.startDate) > new Date(formData.endDate)) {
       errors.endDate = "End date must be after start date";
     }
@@ -128,16 +126,14 @@ export default function Booking() {
           text: "✅ Booking created successfully! Redirecting to dashboard..." 
         });
         
-        console.log("Booking successful, order ID:", data.order?.id);
-        
-        // ✅ Use window.location for reliable redirect
+        // Redirect after 1.5 seconds
         setTimeout(() => {
-          window.location.href = "/dashboard";
-        }, 2000);
+          window.location.href = "/dashboard?success=true";
+        }, 1500);
       } else {
         setBookingMessage({ 
           type: "error", 
-          text: data.error || "Booking failed. Please try again." 
+          text: data.error || data.message || "Booking failed. Please try again." 
         });
         setSubmitted(false);
       }
@@ -163,7 +159,7 @@ export default function Booking() {
     <section className="bg-neutralLight min-h-screen py-12 px-4">
       <SEO
         title="Book a Car — CarHub Nigeria"
-        description="Book a car online with CarHub. Choose your pickup location, date, and vehicle type. Fast, easy, secure booking."
+        description="Book a car online with CarHub. Choose your pickup location, date, and vehicle type."
         path="/booking"
       />
       
@@ -186,150 +182,57 @@ export default function Booking() {
         )}
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-          {/* Full Name */}
           <div>
             <label className={labelCls}>Full Name <span className="text-accent">*</span></label>
-            <input
-              type="text"
-              name="fullName"
-              placeholder="e.g. John Doe"
-              value={formData.fullName}
-              onChange={handleChange}
-              className={inputCls}
-            />
+            <input type="text" name="fullName" placeholder="e.g. John Doe" value={formData.fullName} onChange={handleChange} className={inputCls} />
             {errors.fullName && <p className="text-red-500 text-xs mt-1">{errors.fullName}</p>}
           </div>
 
-          {/* Phone */}
           <div>
             <label className={labelCls}>Phone Number <span className="text-accent">*</span></label>
-            <input
-              type="tel"
-              name="phone"
-              placeholder="e.g. 08012345678"
-              value={formData.phone}
-              onChange={handleChange}
-              className={inputCls}
-            />
+            <input type="tel" name="phone" placeholder="e.g. 08012345678" value={formData.phone} onChange={handleChange} className={inputCls} />
             {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
           </div>
 
-          {/* Email */}
           <div>
             <label className={labelCls}>Email Address <span className="text-accent">*</span></label>
-            <input
-              type="email"
-              name="email"
-              placeholder="e.g. john@email.com"
-              value={formData.email}
-              onChange={handleChange}
-              className={inputCls}
-            />
+            <input type="email" name="email" placeholder="e.g. john@email.com" value={formData.email} onChange={handleChange} className={inputCls} />
             {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
           </div>
 
-          {/* Pickup Location */}
           <div>
             <label className={labelCls}>Pickup Location <span className="text-accent">*</span></label>
-            <input
-              type="text"
-              name="pickupLocation"
-              placeholder="e.g. Murtala Muhammed Airport, Lagos"
-              value={formData.pickupLocation}
-              onChange={handleChange}
-              className={inputCls}
-            />
+            <input type="text" name="pickupLocation" placeholder="e.g. Murtala Muhammed Airport, Lagos" value={formData.pickupLocation} onChange={handleChange} className={inputCls} />
             {errors.pickupLocation && <p className="text-red-500 text-xs mt-1">{errors.pickupLocation}</p>}
           </div>
 
-          {/* Drop-off Location */}
           <div>
             <label className={labelCls}>Drop-off Location <span className="text-accent">*</span></label>
-            <input
-              type="text"
-              name="dropoffLocation"
-              placeholder="e.g. Victoria Island, Lagos"
-              value={formData.dropoffLocation}
-              onChange={handleChange}
-              className={inputCls}
-            />
+            <input type="text" name="dropoffLocation" placeholder="e.g. Victoria Island, Lagos" value={formData.dropoffLocation} onChange={handleChange} className={inputCls} />
             {errors.dropoffLocation && <p className="text-red-500 text-xs mt-1">{errors.dropoffLocation}</p>}
           </div>
 
-          {/* Start Date */}
           <div>
             <label className={labelCls}>Start Date <span className="text-accent">*</span></label>
-            <input
-              type="date"
-              name="startDate"
-              value={formData.startDate}
-              onChange={handleChange}
-              className={inputCls}
-              min={new Date().toISOString().split('T')[0]}
-            />
+            <input type="date" name="startDate" value={formData.startDate} onChange={handleChange} className={inputCls} min={new Date().toISOString().split('T')[0]} />
             {errors.startDate && <p className="text-red-500 text-xs mt-1">{errors.startDate}</p>}
           </div>
 
-          {/* End Date */}
           <div>
             <label className={labelCls}>End Date <span className="text-accent">*</span></label>
-            <input
-              type="date"
-              name="endDate"
-              value={formData.endDate}
-              onChange={handleChange}
-              className={inputCls}
-              min={formData.startDate || new Date().toISOString().split('T')[0]}
-            />
+            <input type="date" name="endDate" value={formData.endDate} onChange={handleChange} className={inputCls} min={formData.startDate || new Date().toISOString().split('T')[0]} />
             {errors.endDate && <p className="text-red-500 text-xs mt-1">{errors.endDate}</p>}
           </div>
 
-          {/* Vehicle ID (hidden if not provided) */}
           {formData.vehicleId && (
             <input type="hidden" name="vehicleId" value={formData.vehicleId} />
           )}
 
-          <button
-            type="submit"
-            disabled={submitted}
-            className="col-span-2 bg-primary text-white py-3 rounded-lg font-heading font-bold tracking-wide hover:bg-blue-900 transition disabled:opacity-60"
-          >
+          <button type="submit" disabled={submitted} className="col-span-2 bg-primary text-white py-3 rounded-lg font-heading font-bold tracking-wide hover:bg-blue-900 transition disabled:opacity-60">
             {submitted ? "Processing..." : "Book My Ride Now"}
           </button>
         </form>
       </div>
-      
     </section>
   );
-//   if (response.ok && data.ok) {
-  
-//   localStorage.setItem("just_booked", "true");
-//     console.log("Booking successful");
-//   window.location.href = "https://carhub-rentals.vercel.app/dashboard?test=1";
-// }
-// if (response.ok && data.ok) {
-//   console.log("Booking successful");
-//   localStorage.setItem("just_booked", "true");
-//   setTimeout(() => {
-//     window.location.href = "/dashboard";
-//   }, 500);
-// }
-// if (response.ok && data.ok) {
-//   console.log("Booking successful");
-//   // Force a complete page reload to a simple HTML page
-//   window.location.href = "https://carhub-rentals.vercel.app/dashboard?booked=true&t=" + Date.now();
-// }
-// if (response.ok && data.ok) {
-//   console.log("Booking successful, setting flag");
-//   sessionStorage.setItem("just_booked", "true");
-//   sessionStorage.setItem("booking_complete", Date.now().toString());
-//   window.location.href = "/dashboard";
-// }
-if (response.ok && data.ok) {
-  console.log("✅ BOOKING SUCCESSFUL - REDIRECTING NOW");
-  window.location.href = "/dashboard?success=true";
 }
-}
-
-
