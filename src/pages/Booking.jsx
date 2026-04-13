@@ -46,6 +46,13 @@ export default function Booking() {
         endDate: location.state.endDate || "",
         vehicleId: location.state.vehicleId || "",
       });
+    } else if (user) {
+      // Pre-fill with user data if available
+      setFormData(prev => ({
+        ...prev,
+        fullName: user.name || "",
+        email: user.email || "",
+      }));
     }
   }, [location.state, user]);
 
@@ -55,15 +62,21 @@ export default function Booking() {
   };
 
   const validate = () => {
-    const e = {};
-    if (!formData.fullName) e.fullName = "Full name is required";
-    if (!formData.phone) e.phone = "Phone number is required";
-    if (!formData.email) e.email = "Email is required";
-    if (!formData.pickupLocation) e.pickupLocation = "Pickup location is required";
-    if (!formData.dropoffLocation) e.dropoffLocation = "Drop-off location is required";
-    if (!formData.startDate) e.startDate = "Start date is required";
-    if (!formData.endDate) e.endDate = "End date is required";
-    return e;
+    const errors = {};
+    if (!formData.fullName.trim()) errors.fullName = "Full name is required";
+    if (!formData.phone.trim()) errors.phone = "Phone number is required";
+    if (!formData.email.trim()) errors.email = "Email is required";
+    if (!formData.pickupLocation.trim()) errors.pickupLocation = "Pickup location is required";
+    if (!formData.dropoffLocation.trim()) errors.dropoffLocation = "Drop-off location is required";
+    if (!formData.startDate) errors.startDate = "Start date is required";
+    if (!formData.endDate) errors.endDate = "End date is required";
+    
+    // Validate date range
+    if (formData.startDate && formData.endDate && new Date(formData.startDate) > new Date(formData.endDate)) {
+      errors.endDate = "End date must be after start date";
+    }
+    
+    return errors;
   };
 
   const handleSubmit = async (e) => {
@@ -81,6 +94,13 @@ export default function Booking() {
     
     const token = localStorage.getItem("token");
     
+    if (!token) {
+      setBookingMessage({ type: "error", text: "Please log in to continue" });
+      setSubmitted(false);
+      navigate("/login");
+      return;
+    }
+    
     try {
       const response = await fetch("https://server-icy-grass-4740.fly.dev/orders", {
         method: "POST",
@@ -89,11 +109,11 @@ export default function Booking() {
           "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify({
-          fullName: formData.fullName,
-          phone: formData.phone,
-          email: formData.email,
-          pickupLocation: formData.pickupLocation,
-          dropoffLocation: formData.dropoffLocation,
+          fullName: formData.fullName.trim(),
+          phone: formData.phone.trim(),
+          email: formData.email.trim().toLowerCase(),
+          pickupLocation: formData.pickupLocation.trim(),
+          dropoffLocation: formData.dropoffLocation.trim(),
           startDate: formData.startDate,
           endDate: formData.endDate,
           vehicleId: formData.vehicleId || undefined,
@@ -103,15 +123,30 @@ export default function Booking() {
       const data = await response.json();
       
       if (response.ok && data.ok) {
-        setBookingMessage({ type: "success", text: "✅ Booking created successfully! Redirecting to dashboard..." });
-        setTimeout(() => navigate("/dashboard"), 2000);
+        setBookingMessage({ 
+          type: "success", 
+          text: "✅ Booking created successfully! Redirecting to dashboard..." 
+        });
+        
+        console.log("Booking successful, order ID:", data.order?.id);
+        
+        // ✅ Use window.location for reliable redirect
+        setTimeout(() => {
+          window.location.href = "/dashboard";
+        }, 2000);
       } else {
-        setBookingMessage({ type: "error", text: data.error || "Booking failed. Please try again." });
+        setBookingMessage({ 
+          type: "error", 
+          text: data.error || "Booking failed. Please try again." 
+        });
         setSubmitted(false);
       }
     } catch (error) {
       console.error("Booking error:", error);
-      setBookingMessage({ type: "error", text: "Network error. Please try again." });
+      setBookingMessage({ 
+        type: "error", 
+        text: "Network error. Please check your connection and try again." 
+      });
       setSubmitted(false);
     }
   };
@@ -119,7 +154,7 @@ export default function Booking() {
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-500">Redirecting to login...</p>
+        <p className="text-gray-500">Loading...</p>
       </div>
     );
   }
@@ -141,7 +176,7 @@ export default function Booking() {
         </p>
 
         {bookingMessage && (
-          <div className={`mb-4 p-4 rounded-lg text-center ${
+          <div className={`mb-6 p-4 rounded-lg text-center ${
             bookingMessage.type === "success" 
               ? "bg-green-50 text-green-600 border border-green-200" 
               : "bg-red-50 text-red-600 border border-red-200"
@@ -231,6 +266,7 @@ export default function Booking() {
               value={formData.startDate}
               onChange={handleChange}
               className={inputCls}
+              min={new Date().toISOString().split('T')[0]}
             />
             {errors.startDate && <p className="text-red-500 text-xs mt-1">{errors.startDate}</p>}
           </div>
@@ -244,6 +280,7 @@ export default function Booking() {
               value={formData.endDate}
               onChange={handleChange}
               className={inputCls}
+              min={formData.startDate || new Date().toISOString().split('T')[0]}
             />
             {errors.endDate && <p className="text-red-500 text-xs mt-1">{errors.endDate}</p>}
           </div>
