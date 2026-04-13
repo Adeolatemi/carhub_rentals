@@ -12,12 +12,12 @@ export default function Dashboard() {
     console.log("User state:", user?.email);
     
     // Check if we just came from booking
-    const justBooked = localStorage.getItem("just_booked");
+    const justBooked = sessionStorage.getItem("just_booked");
     console.log("Just booked flag:", justBooked);
     
     if (justBooked === "true") {
       console.log("Clearing just_booked flag");
-      localStorage.removeItem("just_booked");
+      sessionStorage.removeItem("just_booked");
       setHasRedirected(true);
     }
   }, [user, loading]);
