@@ -1,20 +1,42 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  const [hasRedirected, setHasRedirected] = useState(false);
 
   useEffect(() => {
-    console.log("Dashboard loaded successfully");
-    console.log("User:", user?.email);
-  }, [user]);
+    console.log("Dashboard mounted");
+    console.log("Loading state:", loading);
+    console.log("User state:", user?.email);
+    
+    // Check if we just came from booking
+    const justBooked = localStorage.getItem("just_booked");
+    console.log("Just booked flag:", justBooked);
+    
+    if (justBooked === "true") {
+      console.log("Clearing just_booked flag");
+      localStorage.removeItem("just_booked");
+      setHasRedirected(true);
+    }
+  }, [user, loading]);
 
-  // If no user, show loading (shouldn't happen due to ProtectedRoute)
-  if (!user) {
+  // Show loading while checking
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-500">Loading...</p>
+        <p className="text-gray-500">Loading dashboard...</p>
+      </div>
+    );
+  }
+
+  // If no user, show message (ProtectedRoute should prevent this)
+  if (!user) {
+    console.log("No user in dashboard - this shouldn't happen");
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-500">Please wait...</p>
       </div>
     );
   }
@@ -33,6 +55,7 @@ export default function Dashboard() {
           <Link
             to="/booking"
             className="text-accent font-semibold underline underline-offset-4 hover:text-yellow-600 transition-colors duration-200"
+            onClick={() => console.log("Navigating to booking")}
           >
             Book here.
           </Link>
