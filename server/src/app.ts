@@ -25,11 +25,15 @@ const app = express();
 //   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 // }));
 // Updated CORS setup
+
 const allowedOrigins = [
   'http://localhost:5173',
   'https://adeolatemi.github.io',
-  'https://carhub-rentals.vercel.app'  // Add your Vercel frontend URL
+  'https://carhub-rentals.vercel.app',
+  'https://carhub-rentals-git-main-adeolas-projects-722ce927.vercel.app' // Add your specific preview URL
 ];
+
+
 
 app.use(cors({
   origin: function(origin, callback) {
