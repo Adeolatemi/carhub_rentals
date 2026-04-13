@@ -1,9 +1,23 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
 export default function Dashboard() {
   const { user } = useAuth();
+
+  // ✅ useEffect must be INSIDE the component
+  useEffect(() => {
+    // Check if we just came from booking
+    const justBooked = localStorage.getItem("just_booked");
+    if (justBooked === "true") {
+      localStorage.removeItem("just_booked");
+      // Don't redirect back to booking
+      return;
+    }
+    
+    // Your existing dashboard logic here...
+    console.log("Dashboard loaded, user:", user?.email);
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-neutralLight flex items-center justify-center px-4">

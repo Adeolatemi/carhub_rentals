@@ -299,6 +299,13 @@ export default function Booking() {
           </button>
         </form>
       </div>
+      
     </section>
   );
+  if (response.ok && data.ok) {
+  // Set a flag to indicate booking was just completed
+  localStorage.setItem("just_booked", "true");
+    console.log("Booking successful, redirecting to dashboard...");
+  window.location.href = "/dashboard";
+}
 }
