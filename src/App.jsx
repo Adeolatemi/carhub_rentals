@@ -5,6 +5,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { UserProvider } from "./contexts/UserContext";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+import NewsletterPopup from "./components/NewsLetterPopup";
 import Home from "./pages/Home";
 import Booking from "./pages/Booking";
 import BookingConfirm from "./pages/BookingConfirm";
@@ -21,7 +22,7 @@ import PartnerVehicles from "./modules/partner/PartnerVehicles";
 import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./ProtectedRoute";
 
-// ✅ FIXED PrivateRoute with proper loading handling
+// PrivateRoute component with proper loading handling
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
   
@@ -43,7 +44,7 @@ function PrivateRoute({ children }) {
     return <Navigate to="/login" replace />;
   }
   
-  console.log("PrivateRoute: User authenticated, showing dashboard");
+  console.log("PrivateRoute: User authenticated, showing protected content");
   return children;
 }
 
@@ -69,28 +70,34 @@ function AppContent() {
 
           {/* Protected routes */}
           <Route 
-  path="/dashboard" 
-  element={
-    <ProtectedRoute>
-      <Dashboard />
-    </ProtectedRoute>
-  } 
-/>
-   {/* Partner routes - PARTNER role only */}
-          <Route path="/partner" element={
-            <ProtectedRoute roles={["PARTNER"]}>
-              <PartnerLayout />
-            </ProtectedRoute>
-          }>
+            path="/dashboard" 
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Partner routes - PARTNER role only */}
+          <Route 
+            path="/partner" 
+            element={
+              <ProtectedRoute roles={["PARTNER"]}>
+                <PartnerLayout />
+              </ProtectedRoute>
+            }
+          >
             <Route index element={<PartnerDashboard />} />
             <Route path="dashboard" element={<PartnerDashboard />} />
             <Route path="vehicles" element={<PartnerVehicles />} />
           </Route>
 
-          <Route path="*" element={<Navigate to="/" />} />
+          {/* 404 - Catch all */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
       <Footer />
+      <NewsletterPopup />
     </div>
   );
 }
