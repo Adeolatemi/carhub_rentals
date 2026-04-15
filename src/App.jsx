@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { UserProvider } from "./contexts/UserContext";
+import { AdminProvider } from "./contexts/AdminContext";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import NewsletterPopup from "./components/NewsLetterPopup";
@@ -22,11 +23,46 @@ import PartnerVehicles from "./modules/partner/PartnerVehicles";
 import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./ProtectedRoute";
 
-// PrivateRoute component with proper loading handling
+// Admin Pages
+import AdminLayout from "./components/admin/AdminLayout";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminVehicles from "./pages/admin/AdminVehicles";
+import AdminOrders from "./pages/admin/AdminOrders";
+import AdminSettings from "./pages/admin/AdminSettings";
+
+// ✅ Admin Route Guard - only SUPERADMIN and ADMIN can access
+function AdminRoute({ children }) {
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+      </div>
+    );
+  }
+  
+  if (!user) {
+    console.log("AdminRoute: No user found, redirecting to login");
+    return <Navigate to="/login" replace />;
+  }
+  
+  // Check if user has admin role
+  const isAdmin = user.role === "SUPERADMIN" || user.role === "ADMIN";
+  if (!isAdmin) {
+    console.log("AdminRoute: User role", user.role, "not authorized for admin");
+    return <Navigate to="/dashboard" replace />;
+  }
+  
+  console.log("AdminRoute: User authorized as", user.role);
+  return children;
+}
+
+// PrivateRoute component
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
   
-  // Show loading indicator while checking authentication
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -38,7 +74,6 @@ function PrivateRoute({ children }) {
     );
   }
   
-  // Redirect to login if not authenticated
   if (!user) {
     console.log("PrivateRoute: No user found, redirecting to login");
     return <Navigate to="/login" replace />;
@@ -68,17 +103,17 @@ function AppContent() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
 
-          {/* Protected routes */}
+          {/* Protected user routes */}
           <Route 
             path="/dashboard" 
             element={
-              <ProtectedRoute>
+              <PrivateRoute>
                 <Dashboard />
-              </ProtectedRoute>
+              </PrivateRoute>
             } 
           />
           
-          {/* Partner routes - PARTNER role only */}
+          {/* Partner routes */}
           <Route 
             path="/partner" 
             element={
@@ -90,6 +125,22 @@ function AppContent() {
             <Route index element={<PartnerDashboard />} />
             <Route path="dashboard" element={<PartnerDashboard />} />
             <Route path="vehicles" element={<PartnerVehicles />} />
+          </Route>
+
+          {/* Admin routes - protected with AdminRoute */}
+          <Route 
+            path="/admin" 
+            element={
+              <AdminRoute>
+                <AdminLayout />
+              </AdminRoute>
+            }
+          >
+            <Route index element={<AdminDashboard />} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="vehicles" element={<AdminVehicles />} />
+            <Route path="orders" element={<AdminOrders />} />
+            <Route path="settings" element={<AdminSettings />} />
           </Route>
 
           {/* 404 - Catch all */}
@@ -107,9 +158,11 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <UserProvider>
-          <Router>
-            <AppContent />
-          </Router>
+          <AdminProvider>
+            <Router>
+              <AppContent />
+            </Router>
+          </AdminProvider>
         </UserProvider>
       </AuthProvider>
     </ThemeProvider>

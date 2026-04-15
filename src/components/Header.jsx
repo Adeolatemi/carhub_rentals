@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useLocation, Link } from "react-router-dom";
 import { getImagePath } from "../utils/getImagePath";
@@ -21,6 +21,22 @@ export default function Header() {
   const { user, logout } = useAuth();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Check if user has admin role
+  const isAdmin = user?.role === "SUPERADMIN" || user?.role === "ADMIN";
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const isActive = (to) => {
     if (to === "/") return location.pathname === "/";
@@ -51,20 +67,77 @@ export default function Header() {
           ))}
         </nav>
 
-        {/* Desktop Auth */}
+        {/* Desktop Auth - Avatar Dropdown */}
         <div className="hidden md:flex flex-shrink-0 items-center space-x-3">
           {user ? (
-            <>
-              <span className="hidden xl:block font-bold text-white px-4 py-2 rounded-xl bg-[#1D3557]/90 text-sm">
-                Hi, {user.name}
-              </span>
+            <div className="relative" ref={dropdownRef}>
               <button
-                onClick={logout}
-                className="px-5 py-2 font-bold uppercase tracking-wide text-white bg-[#1D3557] hover:bg-black rounded-2xl transition-all duration-300 text-sm"
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="flex items-center gap-2 bg-[#1D3557]/90 hover:bg-[#1D3557] px-4 py-2 rounded-full transition-all duration-300"
               >
-                Logout
+                <div className="w-8 h-8 rounded-full bg-[#F4D35E] text-[#0A2342] flex items-center justify-center font-bold">
+                  {user.name?.charAt(0).toUpperCase() || "U"}
+                </div>
+                <span className="text-white text-sm font-medium hidden lg:block">
+                  {user.name?.split(" ")[0]}
+                </span>
+                <svg className={`w-4 h-4 text-white transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
               </button>
-            </>
+
+              {/* Dropdown Menu */}
+              {dropdownOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border z-50 overflow-hidden">
+                  <div className="px-4 py-3 border-b bg-gray-50">
+                    <p className="text-sm font-semibold text-gray-800">{user.name}</p>
+                    <p className="text-xs text-gray-500">{user.email}</p>
+                    <span className="inline-block mt-1 px-2 py-0.5 text-xs rounded-full bg-purple-100 text-purple-600">
+                      {user.role}
+                    </span>
+                  </div>
+                  
+                  <Link
+                    to="/dashboard"
+                    onClick={() => setDropdownOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                    Dashboard
+                  </Link>
+
+                  {/* Admin Portal - Only visible to admins */}
+                  {isAdmin && (
+                    <Link
+                      to="/admin"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 text-purple-600 hover:bg-purple-50 transition border-t"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      Admin Portal
+                    </Link>
+                  )}
+
+                  <button
+                    onClick={() => {
+                      logout();
+                      setDropdownOpen(false);
+                    }}
+                    className="flex items-center gap-3 w-full px-4 py-3 text-red-600 hover:bg-red-50 transition border-t"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
           ) : (
             <>
               <Link to="/login" className="font-bold uppercase tracking-wide text-white hover:text-[#F4D35E] px-5 py-2 bg-[#1D3557]/90 hover:bg-[#1D3557] rounded-xl transition-all duration-300 text-sm">
@@ -117,6 +190,16 @@ export default function Header() {
             {user ? (
               <>
                 <p className="text-white/60 text-xs px-4">Hi, {user.name}</p>
+                {/* Mobile Admin Link */}
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    onClick={() => setMenuOpen(false)}
+                    className="block py-3 px-4 rounded-xl font-bold text-sm text-purple-300 hover:bg-white/10 transition"
+                  >
+                    🔧 Admin Portal
+                  </Link>
+                )}
                 <button
                   onClick={() => { logout(); setMenuOpen(false); }}
                   className="w-full text-left py-3 px-4 rounded-xl font-bold text-sm text-white hover:bg-white/10 transition"
