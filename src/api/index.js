@@ -1,22 +1,12 @@
 // src/api/index.js
 import axios from "axios";
 
-// ✅ Make sure this is the correct URL
-// const API_URL = import.meta.env.VITE_API_BASE_URL || 'https://carhub-api.fly.dev';
-// console.log("🔧 API initialized with URL:", API_URL);
-
-// // Create axios instance
-// const api = axios.create({
-//   baseURL: API_URL,
-//   withCredentials: true,
-//   timeout: 30000, // 30 second timeout
-//   headers: {
-//     "Content-Type": "application/json",
-//     "Accept": "application/json",
-//   }
-// });
+// HARDCODED - Force the correct URL
 const API_URL = 'https://carhub-api.fly.dev';
 
+console.log("🔧 API initialized with URL:", API_URL);
+
+// Create axios instance
 const api = axios.create({
   baseURL: API_URL,
   withCredentials: true,
@@ -24,36 +14,15 @@ const api = axios.create({
     "Content-Type": "application/json",
   }
 });
-// Request interceptor - add token to every request
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token");
-    console.log("📤 Request interceptor - URL:", config.url);
-    console.log("📤 Request interceptor - Token exists:", !!token);
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-      console.log("📤 Added Authorization header");
-    }
-    return config;
-  },
-  (error) => {
-    console.error("📤 Request interceptor error:", error);
-    return Promise.reject(error);
-  }
-);
 
-// Response interceptor - handle responses properly
-api.interceptors.response.use(
-  (response) => {
-    console.log("📥 Response interceptor - Status:", response.status);
-    console.log("📥 Response interceptor - Data:", response.data);
-    return response;
-  },
-  (error) => {
-    console.error("📥 Response interceptor error:", error.response?.status, error.response?.data);
-    return Promise.reject(error);
+// Attach token if present
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
-);
+  return config;
+});
 
 // Auth endpoints
 export const auth = {

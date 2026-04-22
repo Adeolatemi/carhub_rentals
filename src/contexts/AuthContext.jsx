@@ -3,7 +3,7 @@ import React, { createContext, useState, useContext, useEffect } from "react";
 export const AuthContext = createContext();
 
 // Direct API URL - no axios dependency
-const API_URL = 'https://server-icy-grass-4740.fly.dev';
+const API_URL = 'https://carhub-api.fly.dev';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
