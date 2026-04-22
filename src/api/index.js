@@ -2,20 +2,28 @@
 import axios from "axios";
 
 // ✅ Make sure this is the correct URL
-const API_URL = import.meta.env.VITE_API_BASE_URL || 'https://carhub-api.fly.dev';
-console.log("🔧 API initialized with URL:", API_URL);
+// const API_URL = import.meta.env.VITE_API_BASE_URL || 'https://carhub-api.fly.dev';
+// console.log("🔧 API initialized with URL:", API_URL);
 
-// Create axios instance
+// // Create axios instance
+// const api = axios.create({
+//   baseURL: API_URL,
+//   withCredentials: true,
+//   timeout: 30000, // 30 second timeout
+//   headers: {
+//     "Content-Type": "application/json",
+//     "Accept": "application/json",
+//   }
+// });
+const API_URL = 'https://carhub-api.fly.dev';
+
 const api = axios.create({
   baseURL: API_URL,
   withCredentials: true,
-  timeout: 30000, // 30 second timeout
   headers: {
     "Content-Type": "application/json",
-    "Accept": "application/json",
   }
 });
-
 // Request interceptor - add token to every request
 api.interceptors.request.use(
   (config) => {
