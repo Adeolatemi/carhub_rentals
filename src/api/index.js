@@ -2,8 +2,7 @@
 import axios from "axios";
 
 // ✅ Make sure this is the correct URL
-const API_URL = 'https://server-icy-grass-4740.fly.dev';
-
+const API_URL = import.meta.env.VITE_API_BASE_URL || 'https://carhub-api.fly.dev';
 console.log("🔧 API initialized with URL:", API_URL);
 
 // Create axios instance

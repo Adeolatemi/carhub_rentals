@@ -428,4 +428,8 @@ export default function Signup() {
       </div>
     </div>
   );
+  // After successful registration
+if (response.data.ok) {
+  navigate("/verify-email", { state: { email: formData.email } });
+}
 }
