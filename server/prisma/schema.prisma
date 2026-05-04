@@ -16,7 +16,9 @@ model User {
   phone     String?
   company   String?
   isActive  Boolean  @default(true)
-
+ // 2FA fields
+  twoFactorEnabled   Boolean   @default(false)
+  twoFactorSecret    String?
   // ✅ AUTH / SECURITY
   emailVerified    Boolean   @default(false)
   verificationCode String?
@@ -27,6 +29,8 @@ model User {
   // ✅ KYC
   kycStatus String?
   kycFile   String?
+
+ 
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

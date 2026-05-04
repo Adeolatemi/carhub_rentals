@@ -124,3 +124,9 @@ export default function AdminSettings() {
     </div>
   );
 }
+import TwoFactorSetup from '../../components/TwoFactorSetup';
+
+// Add this section to your existing AdminSettings page
+<div className="mt-6">
+  <TwoFactorSetup />
+</div>

@@ -126,7 +126,47 @@ router.get("/me", authenticate, async (req: AuthRequest, res) => {
   } catch (err) {
     console.error("Get current user error:", err);
     res.status(500).json({ error: "Internal Server Error" });
-  }
+  } 
 });
 
+// Add this to your login function (after password verification)
+import { verifyTwoFactorToken } from '../services/twoFactorService';
+
+// Inside login route, after password validation:
+if (user.twoFactorEnabled) {
+  // Instead of returning token immediately, return requires2FA flag
+  return res.json({
+    requires2FA: true,
+    userId: user.id,
+    message: '2FA verification required',
+  });
+}
+
+// Create a separate endpoint for 2FA verification after login
+router.post('/verify-2fa', async (req, res) => {
+  try {
+    const { userId, token } = req.body;
+    
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user || !user.twoFactorSecret) {
+      return res.status(400).json({ error: 'Invalid request' });
+    }
+    
+    const isValid = verifyTwoFactorToken(user.twoFactorSecret, token);
+    if (!isValid) {
+      return res.status(401).json({ error: 'Invalid 2FA code' });
+    }
+    
+    const jwtToken = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: "7d" });
+    
+    res.json({
+      ok: true,
+      token: jwtToken,
+      user: { id: user.id, name: user.name, email: user.email, role: user.role },
+    });
+  } catch (error) {
+    console.error('2FA verification error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 export default router;

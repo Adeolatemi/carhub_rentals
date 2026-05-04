@@ -4,7 +4,6 @@ import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import path from "path";
 import multer from "multer";
-
 import healthRouter from "./routes/health";
 import authRoutes from "./routes/auth";
 import adminRouter from "./routes/admin";
@@ -12,6 +11,7 @@ import adminRouter from "./routes/admin";
 // import subscriptionsRouter from "./routes/subscriptions";
 import ordersRouter from "./routes/orders";
 import usersRouter from "./routes/users";
+import twoFactorRouter from "./routes/twoFactor";
 
 dotenv.config();
 
@@ -70,5 +70,6 @@ app.use("/users", usersRouter);
 
 // Root endpoint
 app.get("/", (_req, res) => res.json({ ok: true, service: "carhub-server" }));
-
+// Add this line with your other routes
+app.use("/2fa", twoFactorRouter);
 export default app;

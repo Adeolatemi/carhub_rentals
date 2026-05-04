@@ -159,3 +159,14 @@ export default function LoginForm() {
     </div>
   );
 }
+const response = await api.post('/auth/login', { email, password });
+
+if (response.data.requires2FA) {
+  // Show 2FA modal
+  setShow2FAModal(true);
+  setTempUserId(response.data.userId);
+} else if (response.data.token) {
+  // Normal login
+  localStorage.setItem('token', response.data.token);
+  // ... redirect logic
+}
