@@ -2,7 +2,7 @@
 import axios from "axios";
 
 // HARDCODED - Force the correct URL
-const API_URL = 'https://carhub-api.fly.dev';
+const API_URL = import.meta.env.VITE_API_BASE_URL || 'https://carhub-api.fly.dev';
 
 console.log("🔧 API initialized with URL:", API_URL);
 
