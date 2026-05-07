@@ -100,7 +100,7 @@ export default function Booking() {
     }
     
     try {
-      const response = await fetch("https://server-icy-grass-4740.fly.dev/orders", {
+      const response = await fetch("https://carhub-api.fly.dev/orders", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

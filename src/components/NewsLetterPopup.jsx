@@ -31,12 +31,7 @@ export default function NewsletterPopup() {
     }
     
     try {
-      // Optional: Send to your backend
-      // const response = await fetch("https://server-icy-grass-4740.fly.dev/newsletter/subscribe", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ email }),
-      // });
+     
       
       // For now, just store locally
       setMessage({ type: "success", text: "Thanks for subscribing! 🎉" });

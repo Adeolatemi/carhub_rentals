@@ -16,6 +16,8 @@ model User {
   phone     String?
   company   String?
   isActive  Boolean  @default(true)
+
+  
  // 2FA fields
   twoFactorEnabled   Boolean   @default(false)
   twoFactorSecret    String?

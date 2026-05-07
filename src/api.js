@@ -1,26 +1,47 @@
 // src/api.js
 import axios from "axios";
+const API_BASE = 'https://carhub-api.fly.dev';
 
-// --- Proxy-friendly base URL ---
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'; // Vite proxy forwards to backend
+
+// Add debug log to see what URL is being used
+console.log('🔍 API_BASE URL being used:', API_BASE);
+console.log('🔍 VITE_API_BASE_URL from env:', import.meta.env.VITE_API_BASE_URL);
 
 // --- Axios instance ---
 const request = axios.create({
   baseURL: API_BASE,
   headers: { "Content-Type": "application/json" },
-  withCredentials: true, // include cookies/session auth
+  withCredentials: true,
 });
 
-// --- Automatically attach token if available ---
+// --- Request interceptor with debugging ---
 request.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  // Log the full URL being requested
+  console.log('📡 Making request to:', config.baseURL + config.url);
   return config;
 });
 
-// --- API functions ---
+// --- Response interceptor to catch errors ---
+request.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error('❌ API Error Details:', {
+      message: error.message,
+      url: error.config?.url,
+      baseURL: error.config?.baseURL,
+      fullURL: error.config?.baseURL + error.config?.url,
+      status: error.response?.status,
+      data: error.response?.data
+    });
+    return Promise.reject(error);
+  }
+);
+
+// --- Rest of your code remains the same ---
 
 // Login user
 async function login(email, password) {

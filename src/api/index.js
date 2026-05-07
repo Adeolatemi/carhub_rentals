@@ -91,3 +91,4 @@ export const subscriptions = {
 };
 
 export default api;
+export { api };
