@@ -1,21 +1,17 @@
-// src/api/index.js
+// src/api/index.js - NO axios instance export
 import axios from "axios";
 
-// API URL configuration
-const API_URL = import.meta.env.VITE_API_BASE_URL || 'https://carhub-api.fly.dev';
+const API_URL = 'https://carhub-api.fly.dev';
 
-console.log("🔧 API initialized with URL:", API_URL);
+console.log("🔧 API URL:", API_URL);
 
-// Create axios instance
+// Create axios instance internally (not exported)
 const api = axios.create({
   baseURL: API_URL,
   withCredentials: true,
-  headers: {
-    "Content-Type": "application/json",
-  }
+  headers: { "Content-Type": "application/json" }
 });
 
-// Attach token if present
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
@@ -24,24 +20,23 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Auth endpoints
+// ONLY export the functions, NOT the api instance
 export const auth = {
   register: (data) => api.post("/auth/register", data),
   login: (data) => api.post("/auth/login", data),
   me: () => api.get("/auth/me"),
 };
 
-// Vehicle endpoints
 export const vehicles = {
   list: (params = {}) => api.get("/vehicles", { params }),
   get: (id) => api.get(`/vehicles/${id}`),
 };
 
-// Subscription endpoints
 export const subscriptions = {
   me: () => api.get("/subscriptions/me"),
   subscribe: (plan) => api.post("/subscriptions/subscribe", { plan }),
 };
 
-// ✅✅✅ CRITICAL - MUST BE AT THE BOTTOM ✅✅✅
-export default api;
+// DO NOT export api as default - this is what's causing the crash
+// No export default
+// No export { api }
