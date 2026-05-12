@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import api from "../../api/index.js";
+import api from "../../api/client.js";
 
 const inputCls = "w-full px-4 py-3 border border-gray-300 rounded-lg font-body text-sm focus:outline-none focus:ring-2 focus:ring-primary";
 const labelCls = "block font-body text-sm font-semibold text-neutralDark mb-1";

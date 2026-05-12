@@ -1,6 +1,6 @@
 // src/components/TwoFactorModal.jsx
 import React, { useState } from 'react';
-import api from '../api';
+import api from '../api/client';
 
 export default function TwoFactorModal({ userId, onSuccess, onCancel }) {
   const [code, setCode] = useState('');

@@ -1,3 +1,4 @@
+console.log("🚀 APP VERSION: 2.0.0 - FORCED REBUILD MAY 9 2026");
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { HelmetProvider } from 'react-helmet-async'
@@ -11,3 +12,5 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     </HelmetProvider>
   </React.StrictMode>
 );
+
+// FORCE NEW BUILD - 20260509140436

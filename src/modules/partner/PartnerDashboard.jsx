@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import api from "../../api/index.js";
+import api from "../../api/client.js";
 
 export default function PartnerDashboard() {
   const [vehicles, setVehicles] = useState([]);
