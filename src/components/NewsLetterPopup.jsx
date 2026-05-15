@@ -33,7 +33,7 @@ export default function NewsletterPopup() {
     try {
      
       
-      // For now, just store locally
+      const response = await fetch("https://carhub-api.fly.dev/newsletter/subscribe", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email }) }); if (!response.ok) throw new Error("Subscription failed");
       setMessage({ type: "success", text: "Thanks for subscribing! 🎉" });
       localStorage.setItem("newsletterSubscribed", "true");
       
