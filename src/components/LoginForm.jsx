@@ -19,74 +19,34 @@ export default function LoginForm() {
     e.preventDefault();
     setError(null);
     setLoading(true);
-    
-    // ========== DEBUG LOGS ==========
-    console.log("═══════════════════════════════════");
-    console.log("🔐 LOGIN ATTEMPT STARTED");
-    console.log("📧 Email entered:", email);
-    console.log("🔑 Password length:", password.length);
-    console.log("🕐 Timestamp:", new Date().toISOString());
-    console.log("═══════════════════════════════════");
-    
+
     try {
-      console.log("📡 Calling login function from AuthContext...");
       const user = await login(email, password);
-      
-      console.log("✅ Login successful!");
-      console.log("👤 User object received:", user);
-      console.log("👤 User role:", user?.role);
-      
-      // Check localStorage after login
-      const storedToken = localStorage.getItem("token");
-      const storedUser = localStorage.getItem("user");
-      console.log("💾 Token saved to localStorage:", storedToken ? "Yes (length: " + storedToken.length + ")" : "No");
-      console.log("💾 User saved to localStorage:", storedUser ? "Yes" : "No");
-      
-      // Redirect based on role
-      const role = user?.role || JSON.parse(localStorage.getItem("user") || "{}")?.role;
-      console.log("🎯 Redirecting based on role:", role);
-      
+      const role = user?.role;
+
       if (role === "PARTNER") {
-        console.log("➡️ Redirecting to /partner/dashboard");
         navigate("/partner/dashboard");
       } else if (role === "ADMIN" || role === "SUPERADMIN") {
-        console.log("➡️ Redirecting to /admin");
         navigate("/admin");
       } else {
-        console.log("➡️ Redirecting to /dashboard");
         navigate("/dashboard");
       }
-      
-      console.log("═══════════════════════════════════");
-      console.log("🎉 LOGIN COMPLETED SUCCESSFULLY");
-      console.log("═══════════════════════════════════");
-      
     } catch (err) {
-      console.error("═══════════════════════════════════");
-      console.error("❌ LOGIN FAILED");
-      console.error("📛 Error object:", err);
-      console.error("📛 Error message:", err?.message);
-      console.error("📛 Error stack:", err?.stack);
-      console.error("═══════════════════════════════════");
-      
       setError(err?.message || "Login failed");
     } finally {
       setLoading(false);
-      console.log("🏁 Login process completed (loading = false)");
     }
   };
 
   return (
     <div className="min-h-screen bg-neutralLight flex items-center justify-center px-4">
       <div className="w-full max-w-md">
-
         <div className="text-center mb-8">
           <h1 className="font-heading text-3xl font-extrabold text-primary">Welcome Back</h1>
           <p className="font-body text-gray-400 mt-2 text-sm">Sign in to continue to CarHub</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl p-8">
-
           {registered && (
             <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm font-body mb-6">
               ✅ Account created! Please sign in.
@@ -101,10 +61,7 @@ export default function LoginForm() {
               <input
                 type="email"
                 value={email}
-                onChange={(e) => {
-                  console.log("📧 Email input changed:", e.target.value);
-                  setEmail(e.target.value);
-                }}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="john@example.com"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg font-body focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
                 required
@@ -118,10 +75,7 @@ export default function LoginForm() {
               <input
                 type="password"
                 value={password}
-                onChange={(e) => {
-                  console.log("🔑 Password input changed (length:", e.target.value.length + ")");
-                  setPassword(e.target.value);
-                }}
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg font-body focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
                 required
@@ -158,15 +112,4 @@ export default function LoginForm() {
       </div>
     </div>
   );
-}
-const response = await api.post('/auth/login', { email, password });
-
-if (response.data.requires2FA) {
-  // Show 2FA modal
-  setShow2FAModal(true);
-  setTempUserId(response.data.userId);
-} else if (response.data.token) {
-  // Normal login
-  localStorage.setItem('token', response.data.token);
-  // ... redirect logic
 }

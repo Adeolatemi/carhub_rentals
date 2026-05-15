@@ -1,12 +1,30 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { vehicles as vehiclesApi } from '../api'
+import { frontendCache } from '../utils/cache';
+import { vehicles } from '../api';
 
 export default function Fleet() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [vehicle, setVehicle] = useState(null)
   const [loading, setLoading] = useState(true)
+useEffect(() => {
+  const fetchVehicles = async () => {
+    // Check cache first
+    const cached = frontendCache.get('vehicles');
+    if (cached) {
+      setVehiclesList(cached);
+      return;
+    }
+    
+    // Fetch from API
+    const response = await vehicles.list();
+    setVehiclesList(response);
+    frontendCache.set('vehicles', response, 10 * 60 * 1000);
+  };
+   fetchVehicles();
+}, []);
 
   useEffect(() => {
     let mounted = true

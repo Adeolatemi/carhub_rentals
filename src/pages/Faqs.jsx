@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import SEO from "../components/SEO";
-
+import { frontendCache } from '../utils/cache';
 // FAQ data
 const faqSections = [
   {
@@ -59,6 +59,21 @@ export default function Faqs() {
     setOpenIndex((prev) => (prev === key ? null : key));
   };
 
+  useEffect(() => {
+  const fetchFaqs = async () => {
+    const cached = frontendCache.get('faqs');
+    if (cached) {
+      setFaqs(cached);
+      return;
+    }
+    
+    const response = await api.get('/faqs');
+    setFaqs(response);
+    frontendCache.set('faqs', response, 24 * 60 * 60 * 1000);
+  };
+  
+  fetchFaqs();
+}, []);
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-slate-900 text-gray-900 dark:text-gray-100 flex justify-center px-4 py-12">
       <SEO

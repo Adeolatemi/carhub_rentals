@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getImagePath } from "../utils/getImagePath";
 import SEO from "../components/SEO";
-
+import { frontendCache } from '../utils/cache';
 const fleet = [
   { id: 1, name: "Toyota Highlander", image: "toyota_highlander.jpg", rate: "35,000" },
   { id: 2, name: "Toyota Prado", image: "toyota_prado.jpg", rate: "40,000" },
@@ -31,6 +31,21 @@ export default function Home() {
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
   const handleSubmit = (e) => { e.preventDefault(); navigate("/booking", { state: formData }); };
+useEffect(() => {
+  const fetchStats = async () => {
+    const cached = frontendCache.get('home-stats');
+    if (cached) {
+      setStats(cached);
+      return;
+    }
+    
+    const response = await api.get('/stats/home');
+    setStats(response);
+    frontendCache.set('home-stats', response, 30 * 60 * 1000);
+  };
+  
+  fetchStats();
+}, []);
 
   return (
     <div className="font-body text-neutralDark">

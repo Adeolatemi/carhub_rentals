@@ -7,12 +7,13 @@ import multer from "multer";
 import healthRouter from "./routes/health";
 import authRoutes from "./routes/auth";
 import adminRouter from "./routes/admin";
-// import vehiclesRouter from "./routes/vehicles";
+import vehiclesRouter from "./routes/vehicles";
 // import subscriptionsRouter from "./routes/subscriptions";
 import ordersRouter from "./routes/orders";
 import usersRouter from "./routes/users";
 import twoFactorRouter from "./routes/twoFactor";
-
+import contactRouter from "./routes/contact";
+import newsletterRouter from "./routes/newsletter";
 dotenv.config();
 
 const app = express();
@@ -61,11 +62,12 @@ app.use(cookieParser());
 app.use("/health", healthRouter);
 app.use("/auth", authRoutes);
 app.use("/admin", adminRouter);
-// app.use("/vehicles", vehiclesRouter);
+ app.use("/vehicles", vehiclesRouter);
 // app.use("/subscriptions", subscriptionsRouter);
 app.use("/orders", ordersRouter);
 app.use("/users", usersRouter);
-
+app.use("/contact", contactRouter);
+app.use("/newsletter", newsletterRouter);
 // app.use("/uploads", express.static(path.join(process.cwd(), "uploads"))); // No persistent storage in serverless
 
 // Root endpoint

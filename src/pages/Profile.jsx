@@ -7,12 +7,14 @@ export default function Profile() {
   async function load() {
     try {
       const [userData, orders] = await Promise.all([
-        request(`/users/me`),
-        request('/orders/my-orders')
+        // request(`/users/me`),
+        // request('/orders/my-orders')
+      api.get("/users/me"),
+        api.get("/orders/my-orders")
       ]);
       setProfile({ ...userData, orders });
     } catch (err) {
-      console.error(err);
+      console.error("Profile load error:", err);
     }
   }
 

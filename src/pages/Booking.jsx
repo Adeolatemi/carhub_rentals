@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import SEO from "../components/SEO";
-
+import { frontendCache } from '../utils/cache';
 const inputCls = "border border-gray-300 p-3 rounded-lg font-body w-full focus:outline-none focus:ring-2 focus:ring-primary";
 const labelCls = "block font-body text-sm font-semibold text-neutralDark mb-1";
 
@@ -25,6 +25,22 @@ export default function Booking() {
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [bookingMessage, setBookingMessage] = useState("");
+
+useEffect(() => {
+  const fetchLocations = async () => {
+    const cached = frontendCache.get('locations');
+    if (cached) {
+      setLocations(cached);
+      return;
+    }
+    
+    const response = await api.get('/locations');
+    setLocations(response);
+    frontendCache.set('locations', response, 24 * 60 * 60 * 1000);
+  };
+  
+  fetchLocations();
+}, []);
 
   // Redirect if not logged in
   useEffect(() => {

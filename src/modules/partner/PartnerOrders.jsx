@@ -3,7 +3,7 @@ import { request, admin } from "../../api";
 
 export default function PartnerOrders() {
   const [orders, setOrders] = useState([]);
-  useEffect(() => { request('/orders').then(setOrders).catch(console.error); }, []);
+  useEffect(() => { request.get('/orders').then(r => setOrders(r.data)).catch(console.error); }, []);
 
   async function confirm(id) {
     try {

@@ -17,6 +17,10 @@ export const subscriptions = {
   subscribe: (plan) => api.post("/subscriptions/subscribe", { plan }),
 };
 
+export const admin = {
+  updateOrderStatus: (id, data) => api.patch(`/admin/orders/${id}`, data),
+};
+
 // ✅ Add this for Profile.jsx compatibility
 export const request = api;
 export default api;
