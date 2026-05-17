@@ -1,5 +1,6 @@
 {
-  "name": "Fatosin Temitope",
-  "email": "fatosintemitope15@gmail.com",
-  "password": "Test123!"
+  "name": "Test User",
+  "email": "test@test.com", 
+  "subject": "Test",
+  "message": "Hello"
 }
