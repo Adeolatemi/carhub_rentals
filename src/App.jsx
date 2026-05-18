@@ -22,7 +22,7 @@ import PartnerDashboard from "./modules/partner/PartnerDashboard";
 import PartnerVehicles from "./modules/partner/PartnerVehicles";
 import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./ProtectedRoute";
-
+import ContactMessages from './pages/admin/ContactMessages';
 // Admin Pages
 import AdminLayout from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -102,7 +102,7 @@ function AppContent() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
-
+          <Route path="contact-messages" element={<ContactMessages />} />
           {/* Protected user routes */}
           <Route 
             path="/dashboard" 

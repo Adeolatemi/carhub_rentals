@@ -47,4 +47,8 @@ export default function AdminSidebar() {
       </div>
     </div>
   );
+  <Link to="/admin/contact-messages" className="...">
+  <FaEnvelope className="..." />
+  <span>Contact Messages</span>
+</Link>
 }

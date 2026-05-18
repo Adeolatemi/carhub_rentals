@@ -6,6 +6,85 @@ import cacheService from '../services/cache.service.js';
 const router = express.Router();
 const prisma = new PrismaClient();
 
+// Get all contact messages
+// router.get('/admin/contact-messages', async (req, res) => {
+//   try {
+//     const messages = await prisma.$queryRaw`
+//       SELECT * FROM contact_messages ORDER BY created_at DESC
+//     `;
+//     res.json(messages);
+//   } catch (error) {
+//     console.error('Error fetching messages:', error);
+//     res.status(500).json({ error: 'Failed to fetch messages' });
+//   }
+// });
+
+// Update message status
+// router.put('/admin/contact-messages/:id', async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { status } = req.body;
+//     await prisma.$executeRaw`
+//       UPDATE contact_messages 
+//       SET status = ${status}, updated_at = NOW()
+//       WHERE id = ${id}
+//     `;
+//     res.json({ success: true });
+//   } catch (error) {
+//     res.status(500).json({ error: 'Failed to update message' });
+//   }
+// });
+// Add these endpoints to your admin.js file
+
+// Get all contact messages
+router.get('/admin/contact-messages', authenticate, requireRole(["SUPERADMIN", "ADMIN"]), async (req, res) => {
+  try {
+    const messages = await prisma.$queryRaw`
+      SELECT id, name, email, phone, subject, message, status, created_at as createdAt, updated_at as updatedAt
+      FROM contact_messages 
+      ORDER BY created_at DESC
+    `;
+    res.json(messages);
+  } catch (error) {
+    console.error('Error fetching contact messages:', error);
+    res.status(500).json({ error: 'Failed to fetch messages' });
+  }
+});
+
+// Update contact message status
+router.put('/admin/contact-messages/:id', authenticate, requireRole(["SUPERADMIN", "ADMIN"]), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    
+    await prisma.$executeRaw`
+      UPDATE contact_messages 
+      SET status = ${status}, updated_at = NOW()
+      WHERE id = ${id}
+    `;
+    
+    res.json({ success: true, message: 'Message updated successfully' });
+  } catch (error) {
+    console.error('Error updating message:', error);
+    res.status(500).json({ error: 'Failed to update message' });
+  }
+});
+
+// Delete contact message
+router.delete('/admin/contact-messages/:id', authenticate, requireRole(["SUPERADMIN", "ADMIN"]), async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    await prisma.$executeRaw`
+      DELETE FROM contact_messages WHERE id = ${id}
+    `;
+    
+    res.json({ success: true, message: 'Message deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting message:', error);
+    res.status(500).json({ error: 'Failed to delete message' });
+  }
+});
 // GET /admin/stats - Get admin dashboard statistics with caching
 router.get('/admin/stats', async (req, res) => {
   try {

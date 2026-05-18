@@ -26,6 +26,7 @@
     "nodemailer": "^8.0.7",
     "paystack": "^2.0.1",
     "qrcode": "^1.5.4",
+    "resend": "^6.12.3",
     "speakeasy": "^2.0.0",
     "twilio": "^4.5.0",
     "validator": "^13.15.35"
