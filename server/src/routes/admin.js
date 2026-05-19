@@ -2,48 +2,36 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import cacheService from '../services/cache.service.js';
+import { authenticate, requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// Get all contact messages
-// router.get('/admin/contact-messages', async (req, res) => {
-//   try {
-//     const messages = await prisma.$queryRaw`
-//       SELECT * FROM contact_messages ORDER BY created_at DESC
-//     `;
-//     res.json(messages);
-//   } catch (error) {
-//     console.error('Error fetching messages:', error);
-//     res.status(500).json({ error: 'Failed to fetch messages' });
-//   }
-// });
-
-// Update message status
-// router.put('/admin/contact-messages/:id', async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { status } = req.body;
-//     await prisma.$executeRaw`
-//       UPDATE contact_messages 
-//       SET status = ${status}, updated_at = NOW()
-//       WHERE id = ${id}
-//     `;
-//     res.json({ success: true });
-//   } catch (error) {
-//     res.status(500).json({ error: 'Failed to update message' });
-//   }
-// });
-// Add these endpoints to your admin.js file
-
-// Get all contact messages
-router.get('/admin/contact-messages', authenticate, requireRole(["SUPERADMIN", "ADMIN"]), async (req, res) => {
+// Get all contact messages (FIXED: removed duplicate /admin prefix)
+router.get('/contact-messages', authenticate, requireRole(["SUPERADMIN", "ADMIN"]), async (req, res) => {
   try {
+    console.log('Fetching contact messages...');
+    
+    // Check if table exists
+    const tableCheck = await prisma.$queryRaw`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'contact_messages'
+      )
+    `;
+    
+    if (!tableCheck[0].exists) {
+      console.log('Contact messages table does not exist yet');
+      return res.json([]);
+    }
+    
     const messages = await prisma.$queryRaw`
-      SELECT id, name, email, phone, subject, message, status, created_at as createdAt, updated_at as updatedAt
+      SELECT id, name, email, phone, subject, message, status, created_at as createdAt
       FROM contact_messages 
       ORDER BY created_at DESC
     `;
+    
+    console.log(`Found ${messages.length} messages`);
     res.json(messages);
   } catch (error) {
     console.error('Error fetching contact messages:', error);
@@ -51,8 +39,8 @@ router.get('/admin/contact-messages', authenticate, requireRole(["SUPERADMIN", "
   }
 });
 
-// Update contact message status
-router.put('/admin/contact-messages/:id', authenticate, requireRole(["SUPERADMIN", "ADMIN"]), async (req, res) => {
+// Update contact message status (FIXED: removed duplicate /admin prefix)
+router.put('/contact-messages/:id', authenticate, requireRole(["SUPERADMIN", "ADMIN"]), async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
@@ -70,8 +58,8 @@ router.put('/admin/contact-messages/:id', authenticate, requireRole(["SUPERADMIN
   }
 });
 
-// Delete contact message
-router.delete('/admin/contact-messages/:id', authenticate, requireRole(["SUPERADMIN", "ADMIN"]), async (req, res) => {
+// Delete contact message (FIXED: removed duplicate /admin prefix)
+router.delete('/contact-messages/:id', authenticate, requireRole(["SUPERADMIN", "ADMIN"]), async (req, res) => {
   try {
     const { id } = req.params;
     
@@ -85,10 +73,10 @@ router.delete('/admin/contact-messages/:id', authenticate, requireRole(["SUPERAD
     res.status(500).json({ error: 'Failed to delete message' });
   }
 });
-// GET /admin/stats - Get admin dashboard statistics with caching
-router.get('/admin/stats', async (req, res) => {
+
+// GET /stats - Get admin dashboard statistics with caching (FIXED: removed duplicate /admin prefix)
+router.get('/stats', async (req, res) => {
   try {
-    // Check cache first
     let stats = await cacheService.get('admin:stats');
     
     if (!stats) {
@@ -106,7 +94,6 @@ router.get('/admin/stats', async (req, res) => {
         prisma.order.count({ where: { status: 'PENDING' } }),
       ]);
 
-      // Get monthly revenue
       const currentMonth = new Date().toISOString().slice(0, 7);
       const monthlyRevenue = await prisma.order.aggregate({
         where: {
@@ -128,7 +115,6 @@ router.get('/admin/stats', async (req, res) => {
         monthlyRevenue: monthlyRevenue._sum.totalAmount || 0,
       };
       
-      // Cache for 5 minutes
       await cacheService.set('admin:stats', stats, 300);
       console.log('✅ Stats cached');
     } else {
@@ -142,8 +128,8 @@ router.get('/admin/stats', async (req, res) => {
   }
 });
 
-// PUT /admin/vehicles/:id - Update vehicle with cache invalidation
-router.put('/admin/vehicles/:id', async (req, res) => {
+// PUT /vehicles/:id - Update vehicle with cache invalidation
+router.put('/vehicles/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const updated = await prisma.vehicle.update({
@@ -151,7 +137,6 @@ router.put('/admin/vehicles/:id', async (req, res) => {
       data: req.body,
     });
     
-    // Invalidate caches
     await cacheService.del(`vehicle:${id}`);
     await cacheService.delPattern('vehicles:*');
     await cacheService.del('admin:stats');
@@ -164,14 +149,13 @@ router.put('/admin/vehicles/:id', async (req, res) => {
   }
 });
 
-// POST /admin/vehicles - Add new vehicle with cache invalidation
-router.post('/admin/vehicles', async (req, res) => {
+// POST /vehicles - Add new vehicle with cache invalidation
+router.post('/vehicles', async (req, res) => {
   try {
     const vehicle = await prisma.vehicle.create({
       data: req.body,
     });
     
-    // Invalidate vehicles cache
     await cacheService.delPattern('vehicles:*');
     await cacheService.del('admin:stats');
     console.log(`🗑️ Cache invalidated - new vehicle added: ${vehicle.id}`);
@@ -183,15 +167,14 @@ router.post('/admin/vehicles', async (req, res) => {
   }
 });
 
-// DELETE /admin/vehicles/:id - Delete vehicle with cache invalidation
-router.delete('/admin/vehicles/:id', async (req, res) => {
+// DELETE /vehicles/:id - Delete vehicle with cache invalidation
+router.delete('/vehicles/:id', async (req, res) => {
   try {
     const { id } = req.params;
     await prisma.vehicle.delete({
       where: { id: parseInt(id) },
     });
     
-    // Invalidate caches
     await cacheService.delPattern('vehicles:*');
     await cacheService.del('admin:stats');
     console.log(`🗑️ Cache invalidated - vehicle deleted: ${id}`);

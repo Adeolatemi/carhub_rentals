@@ -7,6 +7,7 @@ const menuItems = [
   { path: "/admin/users", icon: "👥", label: "Users & Access" },
   { path: "/admin/vehicles", icon: "🚗", label: "Vehicles" },
   { path: "/admin/orders", icon: "📦", label: "Orders" },
+  { path: "/admin/contact-messages", icon: "📧", label: "Contact Messages" },
   { path: "/admin/settings", icon: "⚙️", label: "Settings" },
 ];
 
@@ -47,8 +48,4 @@ export default function AdminSidebar() {
       </div>
     </div>
   );
-  <Link to="/admin/contact-messages" className="...">
-  <FaEnvelope className="..." />
-  <span>Contact Messages</span>
-</Link>
 }
