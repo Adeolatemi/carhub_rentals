@@ -278,5 +278,54 @@ router.delete("/contact-messages/:id", authenticate, requireRole(["SUPERADMIN", 
     res.status(500).json({ error: "Failed to delete message" });
   }
 });
-
+// Get all contact messages with pagination
+router.get("/contact-messages", authenticate, requireRole(["SUPERADMIN", "ADMIN"]), async (req: AuthRequest, res) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const status = req.query.status as string;
+    const search = req.query.search as string;
+    const offset = (page - 1) * limit;
+    
+    let whereClause = '';
+    const params: any[] = [];
+    
+    if (status && status !== 'all') {
+      whereClause = `WHERE status = $${params.length + 1}`;
+      params.push(status);
+    }
+    
+    if (search) {
+      const searchTerm = `%${search}%`;
+      whereClause = whereClause ? `${whereClause} AND (name ILIKE $${params.length + 1} OR email ILIKE $${params.length + 1} OR subject ILIKE $${params.length + 1})` 
+        : `WHERE (name ILIKE $${params.length + 1} OR email ILIKE $${params.length + 1} OR subject ILIKE $${params.length + 1})`;
+      params.push(searchTerm);
+    }
+    
+    const countResult = await prisma.$queryRawUnsafe(
+      `SELECT COUNT(*) as total FROM contact_messages ${whereClause}`,
+      ...params
+    );
+    const total = parseInt(countResult[0].total);
+    
+    const messages = await prisma.$queryRawUnsafe(
+      `SELECT id, name, email, phone, subject, message, status, created_at as "createdAt"
+       FROM contact_messages ${whereClause}
+       ORDER BY created_at DESC
+       LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+      ...params, limit, offset
+    );
+    
+    res.json({
+      messages,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+      limit
+    });
+  } catch (error) {
+    console.error("Error fetching contact messages:", error);
+    res.status(500).json({ error: "Failed to fetch messages" });
+  }
+});
 export default router;
