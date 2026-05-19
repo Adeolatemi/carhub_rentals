@@ -158,5 +158,65 @@ router.get('/messages', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch messages' });
   }
 });
+// Submit contact form - always return success if saved to database
+router.post('/submit', async (req, res) => {
+  try {
+    const { name, email, phone, subject, message } = req.body;
+
+    // Validate required fields
+    if (!name || !email || !subject || !message) {
+      return res.status(400).json({ error: 'Please fill in all required fields' });
+    }
+
+    const fullPhone = phone || '';
+
+    // Save to database
+    await prisma.$executeRaw`
+      INSERT INTO contact_messages (id, name, email, phone, subject, message, status)
+      VALUES (gen_random_uuid(), ${name}, ${email}, ${fullPhone}, ${subject}, ${message}, 'pending')
+    `;
+    console.log('✅ Contact message saved to database');
+
+    // Try to send email, but don't fail if it doesn't work
+    try {
+      // Email to admin
+      await transporter.sendMail({
+        from: `"CarHub Contact" <${process.env.SMTP_USER}>`,
+        to: process.env.ADMIN_EMAIL || 'adeolafatosin@gmail.com',
+        subject: `Contact Form: ${subject}`,
+        html: adminHtml,
+      });
+      console.log('✅ Admin email sent');
+    } catch (emailError) {
+      console.error('Email sending failed (non-critical):', emailError.message);
+      // Don't return error - message is already saved
+    }
+
+    try {
+      // Auto-reply to user
+      await transporter.sendMail({
+        from: `"CarHub Rentals" <${process.env.SMTP_USER}>`,
+        to: email,
+        subject: 'We received your message - CarHub Rentals',
+        html: userHtml,
+      });
+      console.log('✅ User auto-reply sent');
+    } catch (emailError) {
+      console.error('Auto-reply failed (non-critical):', emailError.message);
+      // Don't return error - message is already saved
+    }
+
+    // ALWAYS return success if message was saved to database
+    res.status(200).json({ 
+      success: true, 
+      message: 'Message sent successfully! We will get back to you soon.' 
+    });
+  } catch (error) {
+    console.error('Contact form error:', error);
+    // Only return error if database save failed
+    res.status(500).json({ error: 'Failed to send message. Please try again.' });
+  }
+});
+
 
 export default router;

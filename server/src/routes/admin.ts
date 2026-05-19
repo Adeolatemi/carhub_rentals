@@ -192,19 +192,6 @@ router.get("/vehicles", authenticate, requireRole(["SUPERADMIN", "ADMIN"]), asyn
   }
 });
 
-// Add this endpoint to your admin.ts file
-router.get("/bookings", authenticate, requireRole(["SUPERADMIN", "ADMIN"]), async (req: AuthRequest, res) => {
-  try {
-    const bookings = await prisma.carBooking.findMany({
-      orderBy: { createdAt: "desc" },
-    });
-    res.json(bookings);
-  } catch (error) {
-    console.error("Get bookings error:", error);
-    res.status(500).json({ error: "Failed to fetch bookings" });
-  }
-});
-
 router.post("/vehicles", authenticate, requireRole(["SUPERADMIN", "ADMIN"]), async (req: AuthRequest, res) => {
   try {
     const { title, description, dailyRate, imageUrl } = req.body;
@@ -226,6 +213,69 @@ router.delete("/vehicles/:id", authenticate, requireRole(["SUPERADMIN", "ADMIN"]
   } catch (error) {
     console.error("Delete vehicle error:", error);
     res.status(500).json({ error: "Failed to delete vehicle" });
+  }
+});
+
+// ==================== CONTACT MESSAGES ====================
+type ContactMessage = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  subject: string;
+  message: string;
+  status: string;
+  created_at: Date;
+};
+
+router.get("/contact-messages", authenticate, requireRole(["SUPERADMIN", "ADMIN"]), async (req: AuthRequest, res) => {
+  try {
+    console.log('Fetching contact messages...');
+    
+    const messages = await prisma.$queryRaw<ContactMessage[]>`
+      SELECT id, name, email, phone, subject, message, status, created_at as createdAt
+      FROM contact_messages 
+      ORDER BY created_at DESC
+    `;
+    
+    console.log(`Found ${messages.length} messages`);
+    res.json(messages);
+  } catch (error) {
+    console.error("Error fetching contact messages:", error);
+    res.status(500).json({ error: "Failed to fetch messages" });
+  }
+});
+
+router.put("/contact-messages/:id", authenticate, requireRole(["SUPERADMIN", "ADMIN"]), async (req: AuthRequest, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    
+    await prisma.$executeRaw`
+      UPDATE contact_messages 
+      SET status = ${status}, updated_at = NOW()
+      WHERE id = ${id}
+    `;
+    
+    res.json({ success: true, message: "Message updated successfully" });
+  } catch (error) {
+    console.error("Error updating message:", error);
+    res.status(500).json({ error: "Failed to update message" });
+  }
+});
+
+router.delete("/contact-messages/:id", authenticate, requireRole(["SUPERADMIN", "ADMIN"]), async (req: AuthRequest, res) => {
+  try {
+    const { id } = req.params;
+    
+    await prisma.$executeRaw`
+      DELETE FROM contact_messages WHERE id = ${id}
+    `;
+    
+    res.json({ success: true, message: "Message deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting message:", error);
+    res.status(500).json({ error: "Failed to delete message" });
   }
 });
 

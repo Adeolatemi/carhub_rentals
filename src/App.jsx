@@ -66,10 +66,8 @@ function PrivateRoute({ children }) {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-gray-500">Loading...</p>
-        </div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+        <p className="mt-4 text-gray-500">Loading...</p>
       </div>
     );
   }
@@ -102,7 +100,7 @@ function AppContent() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path="contact-messages" element={<ContactMessages />} />
+          
           {/* Protected user routes */}
           <Route 
             path="/dashboard" 
@@ -140,6 +138,7 @@ function AppContent() {
             <Route path="users" element={<AdminUsers />} />
             <Route path="vehicles" element={<AdminVehicles />} />
             <Route path="orders" element={<AdminOrders />} />
+            <Route path="contact-messages" element={<ContactMessages />} />
             <Route path="settings" element={<AdminSettings />} />
           </Route>
 
