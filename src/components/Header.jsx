@@ -96,7 +96,6 @@ export default function Header() {
                       {user.role}
                     </span>
                   </div>
-                  
                   <Link
                     to="/dashboard"
                     onClick={() => setDropdownOpen(false)}

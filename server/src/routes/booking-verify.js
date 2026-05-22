@@ -3,7 +3,9 @@ import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import multer from 'multer';
 import { v2 as cloudinary } from 'cloudinary';
-import { randomBytes } from 'crypto';
+import Paystack from 'paystack-sdk';
+import { createCanvas, loadImage } from 'canvas';
+import * as faceapi from 'face-api.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -15,30 +17,29 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Configure multer for memory storage
+// Configure Paystack
+const paystack = new Paystack(process.env.PAYSTACK_SECRET_KEY);
+
+// Configure multer
 const storage = multer.memoryStorage();
-const upload = multer({ 
+const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type. Only JPEG, PNG, and PDF are allowed.'));
+      cb(new Error('Only JPEG and PNG images are allowed'));
     }
   }
 });
 
-// Helper function to upload to Cloudinary
+// Upload to Cloudinary
 const uploadToCloudinary = (fileBuffer, folder, fileName) => {
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
-      {
-        folder: `carhub/${folder}`,
-        public_id: fileName,
-        resource_type: 'auto',
-      },
+      { folder: `carhub/${folder}`, public_id: fileName },
       (error, result) => {
         if (error) reject(error);
         else resolve(result);
@@ -48,248 +49,256 @@ const uploadToCloudinary = (fileBuffer, folder, fileName) => {
   });
 };
 
-// Helper function to generate unique filename
-const generateFileName = (userId, documentType) => {
-  const timestamp = Date.now();
-  const random = randomBytes(8).toString('hex');
-  return `${userId}_${documentType}_${timestamp}_${random}`;
+// Load face-api models (run once)
+let modelsLoaded = false;
+const loadFaceModels = async () => {
+  if (!modelsLoaded) {
+    await faceapi.nets.ssdMobilenetv1.loadFromDisk('./models');
+    await faceapi.nets.faceLandmark68Net.loadFromDisk('./models');
+    await faceapi.nets.faceRecognitionNet.loadFromDisk('./models');
+    modelsLoaded = true;
+  }
 };
 
-// Calculate booking price
-const calculateBookingPrice = (vehicle, startDate, endDate, options = {}) => {
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-  const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+// Compare faces
+const compareFaces = async (selfieBuffer, licenseBuffer) => {
+  await loadFaceModels();
   
-  if (totalDays <= 0) throw new Error('End date must be after start date');
+  const selfieImage = await loadImage(selfieBuffer);
+  const licenseImage = await loadImage(licenseBuffer);
   
-  const subtotal = vehicle.dailyRate * totalDays;
+  const selfieDetection = await faceapi.detectSingleFace(selfieImage).withFaceLandmarks().withFaceDescriptor();
+  const licenseDetection = await faceapi.detectSingleFace(licenseImage).withFaceLandmarks().withFaceDescriptor();
   
-  // Nigerian VAT is 7.5%
-  const VAT_RATE = 0.075;
-  const vat = subtotal * VAT_RATE;
-  
-  // Local government tax (varies by state, using 0.5% as example)
-  const TAX_RATE = 0.005;
-  const tax = subtotal * TAX_RATE;
-  
-  let driverFee = 0;
-  if (options.driverRequired) {
-    driverFee = 10000 * totalDays;
+  if (!selfieDetection || !licenseDetection) {
+    return { matched: false, score: 0, error: 'Face not detected in one or both images' };
   }
   
-  const grandTotal = subtotal + vat + tax + driverFee;
+  const distance = faceapi.euclideanDistance(selfieDetection.descriptor, licenseDetection.descriptor);
+  const matchScore = 1 - distance;
+  const matched = matchScore > 0.6;
   
-  return {
-    totalDays,
-    dailyRate: vehicle.dailyRate,
-    subtotal,
-    vat,
-    tax,
-    driverFee,
-    grandTotal,
-    currency: 'NGN'
-  };
+  return { matched, score: matchScore };
 };
 
-// Get available vehicles for booking
-router.get('/available-vehicles', async (req, res) => {
-  try {
-    const { startDate, endDate } = req.query;
-    
-    const vehicles = await prisma.vehicle.findMany({
-      where: {
-        available: true,
-      }
-    });
-    
-    res.json(vehicles);
-  } catch (error) {
-    console.error('Error fetching vehicles:', error);
-    res.status(500).json({ error: 'Failed to fetch vehicles' });
-  }
+// Car types data
+const CAR_TYPES = [
+  { id: 'saloon', name: 'Saloon Car', dailyRate: 25000, capacity: 4, image: '/images/saloon.jpg' },
+  { id: 'suv', name: 'SUV', dailyRate: 45000, capacity: 5, image: '/images/suv.jpg' },
+  { id: 'luxury', name: 'Luxury Sedan', dailyRate: 75000, capacity: 4, image: '/images/luxury.jpg' },
+  { id: 'hiace', name: 'Hiace Bus', dailyRate: 80000, capacity: 14, image: '/images/hiace.jpg' },
+  { id: 'coaster', name: 'Coaster Bus', dailyRate: 120000, capacity: 32, image: '/images/coaster.jpg' }
+];
+
+// Service types
+const SERVICE_TYPES = [
+  'Airport Transfer', 'Business Meeting', 'Event Transportation',
+  'City Tour', 'Wedding Transport', 'Shopping Trip', 'Other'
+];
+
+// Locations
+const LOCATIONS = [
+  'Murtala Muhammed Airport (MMA)', 'Lagos Island', 'Victoria Island', 'Ikoyi',
+  'Lekki Phase 1', 'Lekki Phase 2', 'Ajah', 'Maryland', 'Ikeja', 'GRA Ikeja',
+  'Surulere', 'Yaba', 'Ogba', 'Agege', 'Badagry', 'Ikorodu', 'Epe'
+];
+
+// Get car types
+router.get('/car-types', (req, res) => {
+  res.json(CAR_TYPES);
 });
 
-// Calculate price (no auth needed for estimation)
-router.post('/calculate-price', async (req, res) => {
+// Get service types
+router.get('/service-types', (req, res) => {
+  res.json(SERVICE_TYPES);
+});
+
+// Get locations
+router.get('/locations', (req, res) => {
+  res.json(LOCATIONS);
+});
+
+// Calculate price
+router.post('/calculate-price', (req, res) => {
   try {
-    const { vehicleId, startDate, endDate, driverRequired } = req.body;
+    const { carTypeId, totalDays, driverRequired } = req.body;
+    const car = CAR_TYPES.find(c => c.id === carTypeId);
     
-    const vehicle = await prisma.vehicle.findUnique({
-      where: { id: vehicleId }
-    });
-    
-    if (!vehicle) {
-      return res.status(404).json({ error: 'Vehicle not found' });
+    if (!car) {
+      return res.status(404).json({ error: 'Car type not found' });
     }
     
-    const priceBreakdown = calculateBookingPrice(vehicle, startDate, endDate, { driverRequired });
+    const subtotal = car.dailyRate * totalDays;
+    const VAT_RATE = 0.075;
+    const vat = subtotal * VAT_RATE;
+    const TAX_RATE = 0.005;
+    const tax = subtotal * TAX_RATE;
+    const driverFee = driverRequired ? 10000 * totalDays : 0;
+    const grandTotal = subtotal + vat + tax + driverFee;
     
-    res.json(priceBreakdown);
+    res.json({
+      carType: car.name,
+      dailyRate: car.dailyRate,
+      totalDays,
+      subtotal,
+      vat,
+      tax,
+      driverFee,
+      grandTotal
+    });
   } catch (error) {
-    console.error('Price calculation error:', error);
-    res.status(500).json({ error: 'Failed to calculate price' });
+    res.status(500).json({ error: error.message });
   }
 });
 
-// Create booking with document uploads and verification
+// Create booking with full verification
 router.post('/create', upload.fields([
-  { name: 'idDocument', maxCount: 1 },
-  { name: 'utilityBill', maxCount: 1 },
   { name: 'driverLicense', maxCount: 1 },
-  { name: 'selfie', maxCount: 1 }
+  { name: 'selfie', maxCount: 1 },
+  { name: 'nepaBill', maxCount: 1 }
 ]), async (req, res) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ error: 'Authentication required' });
-    }
-    
-    // Get user from token (simplified - implement your auth middleware)
-    const userId = req.body.userId; // Replace with actual user ID from token
-    
     const {
-      vehicleId,
-      startDate,
-      endDate,
-      driverRequired,
-      driverLicenseNumber,
-      licenseDob,
-      utilityAddress
+      fullName, email, phone, pickupLocation, destination,
+      carTypeId, serviceType, pickupDate, pickupTime, passengers,
+      specialRequests, driverRequired, driverLicenseNumber,
+      totalDays
     } = req.body;
     
     const files = req.files;
+    const car = CAR_TYPES.find(c => c.id === carTypeId);
     
-    // Get vehicle details
-    const vehicle = await prisma.vehicle.findUnique({ 
-      where: { id: vehicleId } 
-    });
-    
-    if (!vehicle) {
-      return res.status(404).json({ error: 'Vehicle not found' });
+    if (!car) {
+      return res.status(400).json({ error: 'Invalid car type' });
     }
     
     // Calculate price
-    const priceBreakdown = calculateBookingPrice(vehicle, startDate, endDate, { 
-      driverRequired: driverRequired === 'true' 
-    });
+    const subtotal = car.dailyRate * parseInt(totalDays);
+    const vat = subtotal * 0.075;
+    const tax = subtotal * 0.005;
+    const driverFee = driverRequired === 'true' ? 10000 * parseInt(totalDays) : 0;
+    const grandTotal = subtotal + vat + tax + driverFee;
     
-    // Upload documents
-    const documentUrls = {};
+    // Upload documents and perform face verification
+    let driverLicenseUrl = null;
+    let selfieUrl = null;
+    let faceVerified = false;
+    let faceMatchScore = 0;
+    let licenseVerified = false;
     
-    if (files && files.idDocument) {
-      const result = await uploadToCloudinary(
-        files.idDocument[0].buffer, 
-        'documents/id', 
-        generateFileName(userId, 'id')
+    if (files?.driverLicense) {
+      const licenseResult = await uploadToCloudinary(
+        files.driverLicense[0].buffer,
+        'documents/license',
+        `${email}_license_${Date.now()}`
       );
-      documentUrls.idDocument = result.secure_url;
+      driverLicenseUrl = licenseResult.secure_url;
+      
+      // If selfie also provided, perform face matching
+      if (files?.selfie) {
+        const selfieResult = await uploadToCloudinary(
+          files.selfie[0].buffer,
+          'verification/selfie',
+          `${email}_selfie_${Date.now()}`
+        );
+        selfieUrl = selfieResult.secure_url;
+        
+        // Perform face comparison
+        const faceMatch = await compareFaces(files.selfie[0].buffer, files.driverLicense[0].buffer);
+        faceVerified = faceMatch.matched;
+        faceMatchScore = faceMatch.score;
+        licenseVerified = faceMatch.matched;
+      }
     }
     
-    if (files && files.utilityBill) {
-      const result = await uploadToCloudinary(
-        files.utilityBill[0].buffer, 
-        'documents/utility', 
-        generateFileName(userId, 'utility')
+    let nepabillUrl = null;
+    if (files?.nepaBill) {
+      const nepaResult = await uploadToCloudinary(
+        files.nepaBill[0].buffer,
+        'documents/nepa',
+        `${email}_nepa_${Date.now()}`
       );
-      documentUrls.utilityBill = result.secure_url;
-    }
-    
-    if (files && files.driverLicense) {
-      const result = await uploadToCloudinary(
-        files.driverLicense[0].buffer, 
-        'documents/license', 
-        generateFileName(userId, 'license')
-      );
-      documentUrls.driverLicense = result.secure_url;
-    }
-    
-    if (files && files.selfie) {
-      const result = await uploadToCloudinary(
-        files.selfie[0].buffer, 
-        'verification/selfie', 
-        generateFileName(userId, 'selfie')
-      );
-      documentUrls.selfie = result.secure_url;
+      nepabillUrl = nepaResult.secure_url;
     }
     
     // Create booking
-    const booking = await prisma.enhancedBooking.create({
+    const booking = await prisma.booking.create({
       data: {
-        userId: userId,
-        vehicleId: vehicleId,
-        startDate: new Date(startDate),
-        endDate: new Date(endDate),
-        totalDays: priceBreakdown.totalDays,
-        dailyRate: priceBreakdown.dailyRate,
-        subtotal: priceBreakdown.subtotal,
-        vat: priceBreakdown.vat,
-        tax: priceBreakdown.tax,
-        driverFee: priceBreakdown.driverFee,
-        grandTotal: priceBreakdown.grandTotal,
-        driverRequired: driverRequired === 'true',
-        idDocument: documentUrls.idDocument,
-        utilityBill: documentUrls.utilityBill,
-        driverLicense: documentUrls.driverLicense,
-        selfieImage: documentUrls.selfie,
-        verificationStatus: 'pending',
-        status: 'pending',
-        paymentStatus: 'unpaid'
+        fullName, email, phone, pickupLocation, destination,
+        carType: carTypeId,
+        carTypeName: car.name,
+        carDailyRate: car.dailyRate,
+        serviceType, pickupDate: new Date(pickupDate),
+        pickupTime, passengers: parseInt(passengers),
+        specialRequests, driverRequired: driverRequired === 'true',
+        driverLicenseNumber, driverLicenseUrl,
+        selfieUrl, faceVerified, faceMatchScore,
+        driverLicenseVerified: licenseVerified,
+        nepabillUrl, totalDays: parseInt(totalDays),
+        subtotal, vat, tax, driverFee, grandTotal,
+        status: 'pending', paymentStatus: 'unpaid'
       }
     });
     
-    // Create verification log
-    await prisma.verificationLog.create({
-      data: {
-        bookingId: booking.id,
-        type: 'initial_verification',
-        status: 'pending',
-        metadata: {
-          licenseNumber: driverLicenseNumber,
-          licenseDob: licenseDob,
-          utilityAddress: utilityAddress
-        }
+    // Initialize Paystack payment
+    const payment = await paystack.transaction.initialize({
+      email,
+      amount: Math.round(grandTotal * 100),
+      callback_url: `${process.env.FRONTEND_URL}/booking/verify`,
+      metadata: {
+        booking_id: booking.id,
+        customer_name: fullName,
+        car_type: car.name,
+        total_days: totalDays
       }
     });
     
-    // Return booking info for payment
+    // Update booking with payment URL
+    await prisma.booking.update({
+      where: { id: booking.id },
+      data: { paymentUrl: payment.data.authorization_url, paymentReference: payment.data.reference }
+    });
+    
     res.json({
       success: true,
       bookingId: booking.id,
-      paymentUrl: `/payment/${booking.id}`,
-      priceBreakdown,
-      booking: booking
+      faceVerified,
+      faceMatchScore,
+      licenseVerified,
+      paymentUrl: payment.data.authorization_url,
+      paymentReference: payment.data.reference,
+      priceBreakdown: { subtotal, vat, tax, driverFee, grandTotal }
     });
     
   } catch (error) {
-    console.error('Booking creation error:', error);
-    res.status(500).json({ error: error.message || 'Failed to create booking' });
+    console.error('Booking error:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 
-// Get booking details
-router.get('/:bookingId', async (req, res) => {
+// Verify payment
+router.get('/verify-payment/:reference', async (req, res) => {
   try {
-    const { bookingId } = req.params;
+    const { reference } = req.params;
     
-    const booking = await prisma.enhancedBooking.findUnique({
-      where: { id: bookingId },
-      include: {
-        vehicle: true,
-        user: {
-          select: { id: true, name: true, email: true, phone: true }
+    const payment = await paystack.transaction.verify({ reference });
+    
+    if (payment.data.status === 'success') {
+      const booking = await prisma.booking.update({
+        where: { paymentReference: reference },
+        data: {
+          paymentStatus: 'paid',
+          status: 'confirmed'
         }
-      }
-    });
-    
-    if (!booking) {
-      return res.status(404).json({ error: 'Booking not found' });
+      });
+      
+      res.json({ success: true, status: 'success', booking });
+    } else {
+      res.json({ success: false, status: 'failed' });
     }
-    
-    res.json(booking);
   } catch (error) {
-    console.error('Error fetching booking:', error);
-    res.status(500).json({ error: 'Failed to fetch booking' });
+    console.error('Payment verification error:', error);
+    res.status(500).json({ error: 'Verification failed' });
   }
 });
 

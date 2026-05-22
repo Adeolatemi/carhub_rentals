@@ -10,7 +10,6 @@ import NewsletterPopup from "./components/NewsLetterPopup";
 import Home from "./pages/Home";
 import Booking from "./pages/Booking";
 import BookingConfirm from "./pages/BookingConfirm";
-import EnhancedBooking from './pages/EnhancedBooking';
 import OurFleet from "./pages/OurFleet";
 import About from "./pages/About";
 import Faqs from "./pages/Faqs";
@@ -95,7 +94,6 @@ function AppContent() {
           <Route path="/vehicle/:id" element={<VehicleDetail />} />
           <Route path="/booking" element={<Booking />} />
           <Route path="/booking/:id" element={<Booking />} />
-          <Route path="/enhanced-booking" element={<EnhancedBooking />} />
           <Route path="/booking/confirm" element={<BookingConfirm />} />
           <Route path="/about" element={<About />} />
           <Route path="/faqs" element={<Faqs />} />

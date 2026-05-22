@@ -12,6 +12,7 @@ import vehiclesRouter from "./routes/vehicles";
 import ordersRouter from "./routes/orders";
 import usersRouter from "./routes/users";
 import twoFactorRouter from "./routes/twoFactor";
+import bookingVerifyRouter from "./routes/booking-verify";
 import contactRouter from "./routes/contact";
 import newsletterRouter from "./routes/newsletter";
 dotenv.config();
@@ -68,6 +69,7 @@ app.use("/orders", ordersRouter);
 app.use("/users", usersRouter);
 app.use("/contact", contactRouter);
 app.use("/newsletter", newsletterRouter);
+app.use("/booking", bookingVerifyRouter);
 // app.use("/uploads", express.static(path.join(process.cwd(), "uploads"))); // No persistent storage in serverless
 
 // Root endpoint
