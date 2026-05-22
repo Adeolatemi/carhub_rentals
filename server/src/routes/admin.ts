@@ -328,4 +328,47 @@ router.get("/contact-messages", authenticate, requireRole(["SUPERADMIN", "ADMIN"
     res.status(500).json({ error: "Failed to fetch messages" });
   }
 });
+import nodemailer from 'nodemailer';
+
+// Email transporter (use your existing email configuration)
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
+  port: parseInt(process.env.SMTP_PORT) || 587,
+  secure: false,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
+
+// Send reply email
+router.post("/reply-message", authenticate, requireRole(["SUPERADMIN", "ADMIN"]), async (req: AuthRequest, res) => {
+  try {
+    const { to, subject, message } = req.body;
+    
+    await transporter.sendMail({
+      from: `"CarHub Support" <${process.env.SMTP_USER}>`,
+      to,
+      subject,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: #0A2342; color: white; padding: 20px; text-align: center;">
+            <h2>CarHub Support</h2>
+          </div>
+          <div style="padding: 20px;">
+            ${message.replace(/\n/g, '<br>')}
+          </div>
+          <div style="background: #f4f4f4; padding: 15px; text-align: center; font-size: 12px; color: #666;">
+            <p>CarHub Rentals | Lagos, Nigeria | <a href="https://carhub-rentals.vercel.app">carhub-rentals.vercel.app</a></p>
+          </div>
+        </div>
+      `,
+    });
+    
+    res.json({ success: true, message: "Reply sent successfully" });
+  } catch (error) {
+    console.error("Error sending reply:", error);
+    res.status(500).json({ error: "Failed to send reply" });
+  }
+});
 export default router;

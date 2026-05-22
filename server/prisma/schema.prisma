@@ -17,37 +17,34 @@ model User {
   company   String?
   isActive  Boolean  @default(true)
 
-  
- // 2FA fields
+  // 2FA fields
   twoFactorEnabled   Boolean   @default(false)
   twoFactorSecret    String?
-  // ✅ AUTH / SECURITY
+  // AUTH / SECURITY
   emailVerified    Boolean   @default(false)
   verificationCode String?
   codeExpires      DateTime?
   resetToken       String?
   resetExpires     DateTime?
 
-  // ✅ KYC
+  // KYC
   kycStatus String?
   kycFile   String?
-
- 
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // ✅ RELATIONS
-  bookings       CarBooking[]
-  orders         Order[]
-  auditLogs      AuditLog[]      @relation("UserAuditLogs")
-  partnerDetails PartnerDetails?
-  userVehicles   Vehicle[]       @relation("UserVehicles")
-  subscriptions  Subscription[]
-  kycHistory     KycHistory[]
+  // RELATIONS
+  bookings           CarBooking[]
+  orders             Order[]
+  auditLogs          AuditLog[]           @relation("UserAuditLogs")
+  partnerDetails     PartnerDetails?
+  userVehicles       Vehicle[]            @relation("UserVehicles")
+  subscriptions      Subscription[]
+  kycHistory         KycHistory[]
+  enhancedBookings   EnhancedBooking[]
+  contactMessages    ContactMessage[]
 }
-
-
 
 model NewsletterSubscriber {
   id             String   @id @default(cuid())
@@ -123,6 +120,7 @@ model Vehicle {
   owner    User?        @relation("UserVehicles", fields: [ownerId], references: [id])
   bookings CarBooking[] @relation("BookingVehicle")
   orders   Order[]      @relation("OrderVehicle")
+  enhancedBookings EnhancedBooking[]
 }
 
 model KycHistory {
@@ -173,4 +171,89 @@ model Subscription {
   updatedAt  DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id])
+}
+
+// ============================================
+// ENHANCED BOOKING & VERIFICATION MODELS
+// ============================================
+
+model EnhancedBooking {
+  id              String   @id @default(cuid())
+  userId          String
+  vehicleId       String
+  startDate       DateTime
+  endDate         DateTime
+  totalDays       Int
+  dailyRate       Float
+  subtotal        Float
+  vat             Float
+  tax             Float
+  driverFee       Float?    // Only defined once!
+  grandTotal      Float
+  status          String   @default("pending")      // pending, verified, confirmed, cancelled
+  paymentStatus   String   @default("unpaid")       // unpaid, paid, refunded
+  paymentIntentId String?
+  
+  // Documents
+  idDocument      String?   // URL to ID document
+  utilityBill     String?   // URL to NEPA bill (3 months)
+  driverLicense   String?   // URL to driver's license
+  selfieImage     String?   // URL to selfie
+  
+  // Verification
+  verificationStatus String @default("pending")     // pending, verified, failed
+  verificationData   Json?   // Store verification results
+  livenessData       Json?   // Store liveness verification data
+  
+  // Driver option
+  driverRequired  Boolean  @default(false)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  user   User     @relation(fields: [userId], references: [id])
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id])
+  verificationLogs VerificationLog[]
+  utilityBillVerifications UtilityBillVerification[]
+}
+
+model VerificationLog {
+  id          String   @id @default(cuid())
+  bookingId   String
+  type        String   // id_check, liveness, license_check, address_check
+  status      String   // success, failed, pending
+  confidence  Float?
+  metadata    Json?    // Store detailed verification results
+  createdAt   DateTime @default(now())
+  
+  booking EnhancedBooking @relation(fields: [bookingId], references: [id])
+}
+
+model UtilityBillVerification {
+  id          String   @id @default(cuid())
+  bookingId   String
+  documentUrl String
+  address     String   // extracted address from bill
+  issueDate   DateTime?
+  verifiedAt  DateTime?
+  status      String   @default("pending")  // pending, verified, rejected
+  rejectionReason String?
+  
+  booking EnhancedBooking @relation(fields: [bookingId], references: [id])
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String
+  message   String
+  status    String   @default("pending")   // pending, read, replied
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  user      User?    @relation(fields: [userId], references: [id])
+  userId    String?
 }

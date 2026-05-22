@@ -10,6 +10,7 @@ import NewsletterPopup from "./components/NewsLetterPopup";
 import Home from "./pages/Home";
 import Booking from "./pages/Booking";
 import BookingConfirm from "./pages/BookingConfirm";
+import EnhancedBooking from './pages/EnhancedBooking';
 import OurFleet from "./pages/OurFleet";
 import About from "./pages/About";
 import Faqs from "./pages/Faqs";
@@ -140,6 +141,7 @@ function AppContent() {
             <Route path="orders" element={<AdminOrders />} />
             <Route path="contact-messages" element={<ContactMessages />} />
             <Route path="settings" element={<AdminSettings />} />
+            <Route path="/enhanced-booking" element={<EnhancedBooking />} />
           </Route>
 
           {/* 404 - Catch all */}
