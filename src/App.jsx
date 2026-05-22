@@ -95,6 +95,7 @@ function AppContent() {
           <Route path="/vehicle/:id" element={<VehicleDetail />} />
           <Route path="/booking" element={<Booking />} />
           <Route path="/booking/:id" element={<Booking />} />
+          <Route path="/enhanced-booking" element={<EnhancedBooking />} />
           <Route path="/booking/confirm" element={<BookingConfirm />} />
           <Route path="/about" element={<About />} />
           <Route path="/faqs" element={<Faqs />} />
@@ -141,8 +142,7 @@ function AppContent() {
             <Route path="orders" element={<AdminOrders />} />
             <Route path="contact-messages" element={<ContactMessages />} />
             <Route path="settings" element={<AdminSettings />} />
-            <Route path="/enhanced-booking" element={<EnhancedBooking />} />
-          </Route>
+            </Route>
 
           {/* 404 - Catch all */}
           <Route path="*" element={<Navigate to="/" replace />} />
